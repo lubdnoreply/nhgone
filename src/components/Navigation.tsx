@@ -8,8 +8,9 @@ import UserHeader from "./UserHeader";
 export default function Navigation({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isLoginPage = pathname === "/";
+  const isAdminPage = pathname.startsWith("/admin");
 
-  if (isLoginPage) {
+  if (isLoginPage || isAdminPage) {
     return <>{children}</>;
   }
 
