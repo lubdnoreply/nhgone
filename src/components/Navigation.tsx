@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import UserHeader from "./UserHeader";
 
 export default function Navigation({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -26,27 +27,15 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
           <Link href="/payments" className={`px-4 py-2 hover:bg-white/5 rounded-lg transition-colors ${pathname === "/payments" ? "text-blue-400 font-medium bg-white/5" : "text-slate-400 hover:text-white"}`}>Payments</Link>
         </nav>
 
-        <div className="mt-auto flex flex-col gap-8">
-           <div className="space-y-2">
-              <h3 className="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Admin</h3>
-              <Link href="/admin" className={`flex px-4 py-2 hover:bg-white/5 rounded-lg transition-colors ${pathname === "/admin" ? "text-purple-400 font-medium bg-white/5" : "text-slate-400 hover:text-white"}`}>Admin Console</Link>
-           </div>
-           
-           <div className="border-t border-white/5 pt-6">
-              <Link href="/profile" className="flex items-center gap-3 px-4 py-2 hover:bg-white/5 rounded-lg transition-colors group">
-                 <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-emerald-500 flex items-center justify-center text-xs font-bold text-white uppercase">
-                    NHG
-                 </div>
-                 <div className="flex-1 overflow-hidden">
-                    <p className="text-sm font-medium text-white truncate">Profile</p>
-                    <p className="text-[10px] text-slate-500 truncate">Settings & Account</p>
-                 </div>
-              </Link>
-           </div>
+        <div className="mt-auto">
+           {/* Removed old profile and admin sections */}
         </div>
       </aside>
-      <main className="flex-1 flex flex-col">
-        {children}
+      <main className="flex-1 flex flex-col h-screen overflow-hidden text-slate-900 bg-slate-50">
+        <UserHeader />
+        <div className="flex-1 overflow-y-auto">
+          {children}
+        </div>
       </main>
     </div>
   );
