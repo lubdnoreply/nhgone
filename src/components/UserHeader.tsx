@@ -37,11 +37,11 @@ export default function UserHeader() {
   const isSuperAdmin = user?.email === "noreply@lubd.com" || user?.user_metadata?.role === "super_admin" || user?.email?.includes("naraihospitality.com");
 
   return (
-    <header className="h-16 flex items-center justify-end px-8 bg-transparent w-full z-10 my-2">
+    <div className="absolute top-8 right-8 z-50 font-sans">
       <div className="relative" ref={dropdownRef}>
         <button 
           onClick={() => setIsOpen(!isOpen)}
-          className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/10 hover:border-blue-400 transition-all font-sans cursor-pointer focus:outline-none"
+          className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/10 hover:border-blue-400 transition-all font-sans cursor-pointer focus:outline-none shadow-lg shadow-black/20"
         >
           {user?.user_metadata?.avatar_url ? (
             <img src={user.user_metadata.avatar_url} alt="Profile" className="w-full h-full object-cover" />
@@ -107,6 +107,6 @@ export default function UserHeader() {
           </div>
         )}
       </div>
-    </header>
+    </div>
   );
 }
