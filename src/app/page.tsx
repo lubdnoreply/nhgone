@@ -1,85 +1,110 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
+import React, { useState } from "react";
+import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
 
-interface Stats {
-  reservations: number;
-  members: number;
-  payments: number;
-}
+export default function LoginPage() {
+  const [showEmailLogin, setShowEmailLogin] = useState(false);
+  const router = useRouter();
 
-export default function Dashboard() {
-  const [stats, setStats] = useState<Stats | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const response = await fetch("http://localhost:8000/stats");
-        const result = await response.json();
-        if (result.status === "success") {
-          setStats(result.data);
-        }
-      } catch (err) {
-        console.error("Dashboard error", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchStats();
-  }, []);
-
-  return (
-    <div className="flex-1 p-8 bg-slate-950 font-sans">
-      <div className="max-w-7xl mx-auto">
-        <header className="mb-12">
-          <h1 className="text-4xl font-extrabold text-white tracking-tight mb-2">
-            Welcome to <span className="bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">NHGOne</span>
-          </h1>
-          <p className="text-slate-400 text-lg">Your Unified Managed Layer for MEWS PMS</p>
-        </header>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-          <StatCard title="Managed Reservations" value={stats?.reservations ?? 0} color="blue" href="/managed-data" />
-          <StatCard title="Chinatown Members" value={stats?.members ?? 0} color="emerald" href="/managed-members" />
-          <StatCard title="Processed Payments" value={stats?.payments ?? 0} color="amber" href="/managed-payments" />
-        </div>
-
-        <section className="bg-white/5 border border-white/10 rounded-3xl p-8 backdrop-blur-xl">
-          <h2 className="text-2xl font-bold text-white mb-6">System Health</h2>
-          <div className="flex items-center gap-4 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl w-fit">
-            <div className="h-3 w-3 rounded-full bg-emerald-500 animate-pulse"></div>
-            <span className="text-emerald-400 font-medium text-sm">FastAPI Backend: Online</span>
-          </div>
-          <div className="mt-8 text-slate-400 grid grid-cols-1 md:grid-cols-2 gap-8">
-             <div>
-                <h3 className="text-white font-semibold mb-2">Integration Strategy</h3>
-                <p className="text-sm leading-relaxed">Secure server-side token injection with POST-only pattern. No MEWS credentials are exposed to the browser.</p>
-             </div>
-             <div>
-                <h3 className="text-white font-semibold mb-2">Sync Pattern</h3>
-                <p className="text-sm leading-relaxed">Local-first management layer in Supabase with RLS. Preserves enriched data while staying synced with PMS.</p>
-             </div>
-          </div>
-        </section>
-      </div>
-    </div>
-  );
-}
-
-function StatCard({ title, value, color, href }: { title: string, value: number, color: string, href: string }) {
-  const colors: Record<string, string> = {
-    blue: "from-blue-500 to-indigo-600 shadow-blue-500/20",
-    emerald: "from-emerald-500 to-teal-600 shadow-emerald-500/20",
-    amber: "from-amber-500 to-orange-600 shadow-amber-500/20"
+  const handleGoogleLogin = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
+        },
+      });
+      if (error) throw error;
+    } catch (err) {
+      console.error("Google Auth Error", err);
+    }
   };
 
   return (
-    <Link href={href} className={`block p-8 rounded-3xl bg-gradient-to-br ${colors[color]} shadow-2xl transition-all transform hover:scale-105 active:scale-95 group`}>
-      <h3 className="text-white/80 font-medium mb-1 uppercase text-[10px] tracking-widest">{title}</h3>
-      <div className="text-5xl font-black text-white group-hover:translate-x-1 transition-transform">{value}</div>
-      <div className="mt-4 text-white/70 text-xs group-hover:text-white transition-colors">Manage Records &rarr;</div>
-    </Link>
+    <div className="min-h-screen flex items-center justify-center bg-[#f0f2f5] p-4 font-sans text-[#1a1f36]">
+      {/* Background soft gradient for extra premium feel */}
+      <div className="absolute inset-0 bg-gradient-to-tr from-blue-50/50 via-white to-emerald-50/50 pointer-events-none" />
+      
+      <div className="relative w-full max-w-md bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-10 md:p-12 transition-all hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)]">
+        <div className="flex flex-col items-center">
+          {/* Logo */}
+          <div className="mb-8 p-1 rounded-xl shadow-sm border border-gray-100 overflow-hidden bg-white">
+             <img 
+               src="https://guideline.lubd.com/wp-content/uploads/2025/11/NHG128.png" 
+               alt="NHG Logo" 
+               className="w-12 h-12 object-contain"
+             />
+          </div>
+
+          <h1 className="text-2xl font-bold mb-2 tracking-tight">NHGOne</h1>
+          <p className="text-gray-500 text-sm mb-10 text-center">Log in to your workspace</p>
+
+          {/* Google Button */}
+          <button 
+            onClick={handleGoogleLogin}
+            className="w-full flex items-center justify-center gap-3 py-3 px-4 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-[0.98] group"
+          >
+            <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+              <path d="M17.64 9.20455C17.64 8.56636 17.5827 7.95273 17.4764 7.36364H9V10.845H13.8436C13.635 11.97 13.0009 12.9232 12.0477 13.5614V15.8195H14.9564C16.6582 14.2527 17.64 11.9455 17.64 9.20455Z" fill="#4285F4"/>
+              <path d="M9 18C11.43 18 13.4673 17.1941 14.9564 15.8195L12.0477 13.5614C11.2418 14.1014 10.2109 14.4205 9 14.4205C6.65591 14.4205 4.67182 12.8373 3.96409 10.71H0.957273V13.0418C2.43818 15.9832 5.48182 18 9 18Z" fill="#34A853"/>
+              <path d="M3.96409 10.71C3.78409 10.1741 3.68182 9.60136 3.68182 9C3.68182 8.39864 3.78409 7.82591 3.96409 7.29V4.95818H0.957273C0.347727 6.17318 0 7.54773 0 9C0 10.4523 0.347727 11.8268 0.957273 13.0418L3.96409 10.71Z" fill="#FBBC05"/>
+              <path d="M9 3.57955C10.3214 3.57955 11.5077 4.03364 12.4405 4.92545L15.0218 2.34409C13.4632 0.891818 11.4259 0 9 0C5.48182 0 2.43818 2.01682 0.957273 4.95818L3.96409 7.29C4.67182 5.16273 6.65591 3.57955 9 3.57955Z" fill="#EA4335"/>
+            </svg>
+            Continue with Google
+          </button>
+
+          {/* Divider with Toggle functionality */}
+          <div className="relative w-full flex items-center my-10 group">
+            <div className="flex-grow border-t border-gray-100"></div>
+            <button 
+              onClick={() => setShowEmailLogin(!showEmailLogin)}
+              className="flex-shrink mx-4 text-[10px] font-bold tracking-widest text-[#6366f1] uppercase hover:text-[#4f46e5] transition-colors cursor-pointer focus:outline-none"
+            >
+              {showEmailLogin ? "HIDE EMAIL OPTION" : "Or sign in with email"}
+            </button>
+            <div className="flex-grow border-t border-gray-100"></div>
+          </div>
+
+          {/* Conditional Email Input */}
+          {showEmailLogin && (
+            <div className="w-full space-y-5 animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="space-y-1.5">
+                <label className="text-sm font-semibold text-gray-700 ml-1">Email Address</label>
+                <input 
+                  type="email" 
+                  placeholder="name@company.com" 
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#6366f1] focus:ring-2 focus:ring-[#6366f1]/20 outline-none transition-all text-sm text-[#1a1f36]"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-semibold text-gray-700 ml-1">Password</label>
+                <input 
+                  type="password" 
+                  placeholder="Enter your password" 
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#6366f1] focus:ring-2 focus:ring-[#6366f1]/20 outline-none transition-all text-sm text-[#1a1f36]"
+                />
+              </div>
+              <button className="w-full py-3.5 px-4 bg-[#6366f1] text-white rounded-xl text-sm font-semibold hover:bg-[#4f46e5] shadow-lg shadow-indigo-200 transition-all active:scale-[0.98]">
+                Log In
+              </button>
+              
+              <div className="text-center">
+                <a href="#" className="text-sm font-medium text-[#6366f1] hover:underline transition-all">
+                  Need an account? Sign Up
+                </a>
+              </div>
+            </div>
+          )}
+          
+          {!showEmailLogin && (
+            <div className="mt-8 text-center text-xs text-gray-400">
+              New to NHG? <a href="#" className="text-[#6366f1] font-semibold hover:underline">Create an account</a>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
