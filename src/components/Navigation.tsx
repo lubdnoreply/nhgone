@@ -27,8 +27,15 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
           <Link href="/payments" className={`px-4 py-2 hover:bg-white/5 rounded-lg transition-colors ${pathname === "/payments" ? "text-blue-400 font-medium bg-white/5" : "text-slate-400 hover:text-white"}`}>Payments</Link>
         </nav>
 
-        <div className="mt-auto">
-           {/* Removed old profile and admin sections */}
+        <div className="mt-auto pb-4">
+           {pathname === "/admin" && (
+             <Link href="/dashboard" className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition-all border border-white/5 shadow-sm group">
+                <svg className="w-5 h-5 text-slate-500 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Back to Dashboard
+             </Link>
+           )}
         </div>
       </aside>
       <main className="flex-1 flex flex-col h-screen overflow-hidden">
