@@ -37,28 +37,28 @@ export default function UserHeader() {
   const isSuperAdmin = user?.email === "noreply@lubd.com" || user?.user_metadata?.role === "super_admin" || user?.email?.includes("naraihospitality.com");
 
   return (
-    <header className="h-16 flex items-center justify-end px-8 bg-white border-b border-slate-200">
+    <header className="h-16 flex items-center justify-end px-8 bg-transparent w-full z-10 my-2">
       <div className="relative" ref={dropdownRef}>
         <button 
           onClick={() => setIsOpen(!isOpen)}
-          className="w-9 h-9 rounded-full overflow-hidden border border-slate-200 hover:ring-2 hover:ring-blue-100 transition-all font-sans"
+          className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/10 hover:border-blue-400 transition-all font-sans cursor-pointer focus:outline-none"
         >
           {user?.user_metadata?.avatar_url ? (
             <img src={user.user_metadata.avatar_url} alt="Profile" className="w-full h-full object-cover" />
           ) : (
-             <div className="w-full h-full bg-gradient-to-tr from-blue-500 to-indigo-500 flex items-center justify-center text-xs font-bold text-white uppercase shadow-inner">
+             <div className="w-full h-full bg-gradient-to-tr from-blue-500 to-emerald-500 flex items-center justify-center text-sm font-bold text-white uppercase shadow-inner">
                 {user?.email?.substring(0, 2) || "U"}
              </div>
           )}
         </button>
 
         {isOpen && (
-          <div className="absolute right-0 mt-3 w-72 bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200 transform origin-top-right font-sans">
-             <div className="p-5 bg-slate-50/80 border-b border-slate-100">
-                <p className="text-sm font-bold text-slate-800 truncate mb-0.5">
+          <div className="absolute right-0 mt-3 w-72 bg-slate-900 rounded-2xl shadow-2xl border border-white/10 overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200 transform origin-top-right font-sans">
+             <div className="p-5 bg-slate-800/50 border-b border-white/5">
+                <p className="text-sm font-bold text-white truncate mb-0.5">
                    {user?.user_metadata?.full_name || "NHG User"}
                 </p>
-                <p className="text-xs text-slate-500 truncate">{user?.email || "user@example.com"}</p>
+                <p className="text-xs text-slate-400 truncate">{user?.email || "user@example.com"}</p>
              </div>
              
              <div className="p-2 space-y-1">
@@ -66,9 +66,9 @@ export default function UserHeader() {
                   <Link 
                     href="/admin" 
                     onClick={() => setIsOpen(false)}
-                    className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-xl transition-all group"
+                    className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-purple-100 hover:bg-white/5 rounded-xl transition-all group"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                    <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition-colors">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                       </svg>
@@ -80,9 +80,9 @@ export default function UserHeader() {
                 <Link 
                   href="/profile" 
                   onClick={() => setIsOpen(false)}
-                  className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-xl transition-all group"
+                  className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-300 hover:bg-white/5 rounded-xl transition-all group"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600 group-hover:bg-slate-600 group-hover:text-white transition-colors">
+                  <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-slate-400 group-hover:bg-white/10 group-hover:text-white transition-colors">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
@@ -90,13 +90,13 @@ export default function UserHeader() {
                   Profile Settings
                 </Link>
 
-                <div className="h-px bg-slate-100 my-1 mx-2" />
+                <div className="h-px bg-white/5 my-1 mx-2" />
                 
                 <button 
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 rounded-xl transition-all group text-left"
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-400 hover:bg-red-500/10 rounded-xl transition-all group text-left"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center text-red-600 group-hover:bg-red-600 group-hover:text-white transition-colors">
+                  <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center text-red-500 group-hover:bg-red-500 group-hover:text-white transition-colors">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                     </svg>

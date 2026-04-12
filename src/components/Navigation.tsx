@@ -31,9 +31,9 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
            {/* Removed old profile and admin sections */}
         </div>
       </aside>
-      <main className="flex-1 flex flex-col h-screen overflow-hidden text-slate-900 bg-slate-50">
+      <main className="flex-1 flex flex-col h-screen overflow-hidden">
         <UserHeader />
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto w-full">
           {children}
         </div>
       </main>
