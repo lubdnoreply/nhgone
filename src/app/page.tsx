@@ -6,7 +6,33 @@ import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const [showEmailLogin, setShowEmailLogin] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
   const router = useRouter();
+
+  const handleEmailLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setErrorMsg("");
+    
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) throw error;
+      
+      router.push("/dashboard");
+    } catch (err: any) {
+      console.error("Email Auth Error", err);
+      setErrorMsg(err.message || "Failed to login");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleGoogleLogin = async () => {
     try {
@@ -69,12 +95,16 @@ export default function LoginPage() {
 
           {/* Conditional Email Input */}
           {showEmailLogin && (
-            <div className="w-full space-y-5 animate-in fade-in slide-in-from-top-2 duration-300">
+            <form onSubmit={handleEmailLogin} className="w-full space-y-5 animate-in fade-in slide-in-from-top-2 duration-300">
+              {errorMsg && <div className="text-red-500 text-sm text-center font-medium bg-red-50 p-2 rounded-lg">{errorMsg}</div>}
               <div className="space-y-1.5">
                 <label className="text-sm font-semibold text-gray-700 ml-1">Email Address</label>
                 <input 
                   type="email" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@company.com" 
+                  required
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#6366f1] focus:ring-2 focus:ring-[#6366f1]/20 outline-none transition-all text-sm text-[#1a1f36]"
                 />
               </div>
@@ -82,12 +112,19 @@ export default function LoginPage() {
                 <label className="text-sm font-semibold text-gray-700 ml-1">Password</label>
                 <input 
                   type="password" 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password" 
+                  required
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#6366f1] focus:ring-2 focus:ring-[#6366f1]/20 outline-none transition-all text-sm text-[#1a1f36]"
                 />
               </div>
-              <button className="w-full py-3.5 px-4 bg-[#6366f1] text-white rounded-xl text-sm font-semibold hover:bg-[#4f46e5] shadow-lg shadow-indigo-200 transition-all active:scale-[0.98]">
-                Log In
+              <button 
+                type="submit"
+                disabled={loading}
+                className="w-full py-3.5 px-4 bg-[#6366f1] text-white rounded-xl text-sm font-semibold hover:bg-[#4f46e5] shadow-lg shadow-indigo-200 transition-all active:scale-[0.98] disabled:opacity-70 flex justify-center items-center"
+              >
+                {loading ? "Logging in..." : "Log In"}
               </button>
               
               <div className="text-center">
@@ -95,7 +132,7 @@ export default function LoginPage() {
                   Need an account? Sign Up
                 </a>
               </div>
-            </div>
+            </form>
           )}
           
           {!showEmailLogin && (
