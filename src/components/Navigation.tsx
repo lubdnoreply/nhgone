@@ -21,7 +21,7 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
         </div>
         <nav className="flex flex-col gap-2">
           <Link href="/dashboard" className={`px-4 py-2 hover:bg-white/5 rounded-lg transition-colors ${pathname === "/dashboard" ? "text-blue-400 font-medium bg-white/5" : "text-slate-400 hover:text-white"}`}>Dashboard</Link>
-          <Link href="/reservations" className={`px-4 py-2 hover:bg-white/5 rounded-lg transition-colors ${pathname === "/reservations" ? "text-blue-400 font-medium bg-white/5" : "text-slate-400 hover:text-white"}`}>Live Reservations</Link>
+          <Link href="/reservations" className={`px-4 py-2 hover:bg-white/5 rounded-lg transition-colors ${pathname === "/reservations" ? "text-blue-400 font-medium bg-white/5" : "text-slate-400 hover:text-white"}`}>Live Data</Link>
           <Link href="/managed-data" className={`px-4 py-2 hover:bg-white/5 rounded-lg transition-colors ${pathname === "/managed-data" ? "text-blue-400 font-medium bg-white/5" : "text-slate-400 hover:text-white"}`}>Managed Data</Link>
           <Link href="/members" className={`px-4 py-2 hover:bg-white/5 rounded-lg transition-colors ${pathname === "/members" ? "text-blue-400 font-medium bg-white/5" : "text-slate-400 hover:text-white"}`}>Members</Link>
           <Link href="/payments" className={`px-4 py-2 hover:bg-white/5 rounded-lg transition-colors ${pathname === "/payments" ? "text-blue-400 font-medium bg-white/5" : "text-slate-400 hover:text-white"}`}>Payments</Link>
