@@ -99,7 +99,7 @@ export default function AdminUsersPage() {
               <input 
                 type="text"
                 placeholder="Search users..."
-                className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/10 transition-all"
+                className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#AAA024]/10 transition-all"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -131,15 +131,15 @@ export default function AdminUsersPage() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
-                <tr><td colSpan={7} className="py-20 text-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div></td></tr>
+                <tr><td colSpan={7} className="py-20 text-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#AAA024] mx-auto"></div></td></tr>
               ) : filteredUsers.map((user) => (
                 <tr key={user.id} className="hover:bg-slate-50/50 transition-colors group">
                   <td className="px-6 py-5 text-sm font-bold text-slate-700">{user.full_name}</td>
-                  <td className="px-6 py-5 text-sm text-blue-500 font-medium">{user.email}</td>
+                  <td className="px-6 py-5 text-sm text-[#AAA024] font-medium">{user.email}</td>
                   <td className="px-6 py-5">
                      <span className={`px-3 py-1 rounded-full text-[11px] font-bold border ${
                        user.role === 'Super Admin' 
-                       ? 'bg-purple-50 text-purple-600 border-purple-100' 
+                       ? 'bg-[#AAA024]/10 text-[#AAA024] border-[#AAA024]/20' 
                        : 'bg-slate-100 text-slate-600 border-slate-200'
                      }`}>
                        {user.role}
@@ -202,7 +202,7 @@ export default function AdminUsersPage() {
                  <div className="space-y-1">
                     <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest px-1">Full Name</label>
                     <input 
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500/20"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#AAA024]/20"
                       value={editingUser.full_name}
                       onChange={(e) => setEditingUser({...editingUser, full_name: e.target.value})}
                     />
@@ -212,7 +212,7 @@ export default function AdminUsersPage() {
                     <div className="space-y-1">
                        <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest px-1">Role</label>
                        <select 
-                         className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500/20"
+                         className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#AAA024]/20"
                          value={editingUser.role}
                          onChange={(e) => setEditingUser({...editingUser, role: e.target.value})}
                        >
@@ -223,7 +223,7 @@ export default function AdminUsersPage() {
                     <div className="space-y-1">
                        <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest px-1">Status</label>
                        <select 
-                         className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500/20"
+                         className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#AAA024]/20"
                          value={editingUser.status}
                          onChange={(e) => setEditingUser({...editingUser, status: e.target.value as any})}
                        >
@@ -236,7 +236,7 @@ export default function AdminUsersPage() {
                  <div className="pt-4 flex gap-3">
                     <button 
                       onClick={handleSave}
-                      className="flex-1 bg-purple-600 text-white rounded-xl py-2.5 text-sm font-bold shadow-lg shadow-purple-200 hover:bg-purple-700 transition-all"
+                      className="flex-1 bg-[#AAA024] text-white rounded-xl py-2.5 text-sm font-bold shadow-lg shadow-[#AAA024]/20 hover:bg-[#8f871e] transition-all"
                     >
                       Save Changes
                     </button>

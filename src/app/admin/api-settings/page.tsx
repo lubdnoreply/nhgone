@@ -103,7 +103,7 @@ export default function ApiSettingsPage() {
         </div>
         <button 
           onClick={() => setIsAdding(!isAdding)}
-          className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${isAdding ? "bg-red-50 text-red-600 border border-red-200" : "bg-purple-600 text-white shadow-lg shadow-purple-600/20"}`}
+          className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${isAdding ? "bg-red-50 text-red-600 border border-red-200" : "bg-[#AAA024] text-white shadow-lg shadow-[#AAA024]/20"}`}
         >
           {isAdding ? "Cancel" : "Add New Property"}
         </button>
@@ -112,7 +112,7 @@ export default function ApiSettingsPage() {
       {isAdding && (
         <div className="mb-10 bg-slate-50 border border-slate-200 rounded-3xl p-8 animate-in slide-in-from-top-4 duration-300 shadow-sm">
            <h3 className="text-xl font-bold mb-6 flex items-center gap-2 text-slate-800">
-             <div className="w-2 h-6 bg-purple-500 rounded-full"></div>
+             <div className="w-2 h-6 bg-[#AAA024] rounded-full"></div>
              New Property Credentials
            </h3>
            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -120,7 +120,7 @@ export default function ApiSettingsPage() {
                 <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Property Name</label>
                 <input 
                   placeholder="e.g. Lub d Koh Samui"
-                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition-all text-slate-900"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#AAA024]/20 transition-all text-slate-900"
                   value={newForm.property_name}
                   onChange={(e) => setNewForm({...newForm, property_name: e.target.value})}
                 />
@@ -128,7 +128,7 @@ export default function ApiSettingsPage() {
               <div className="space-y-1.5">
                 <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Client Name</label>
                 <input 
-                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition-all text-slate-900"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#AAA024]/20 transition-all text-slate-900"
                   value={newForm.client_name}
                   onChange={(e) => setNewForm({...newForm, client_name: e.target.value})}
                 />
@@ -137,7 +137,7 @@ export default function ApiSettingsPage() {
                 <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Client Token</label>
                 <input 
                   placeholder="Paste Client Token here..."
-                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition-all text-slate-900"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#AAA024]/20 transition-all text-slate-900"
                   value={newForm.client_token}
                   onChange={(e) => setNewForm({...newForm, client_token: e.target.value})}
                 />
@@ -146,7 +146,7 @@ export default function ApiSettingsPage() {
                 <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Access Token</label>
                 <input 
                   placeholder="Paste Access Token here..."
-                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition-all text-slate-900"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#AAA024]/20 transition-all text-slate-900"
                   value={newForm.access_token}
                   onChange={(e) => setNewForm({...newForm, access_token: e.target.value})}
                 />
@@ -154,7 +154,7 @@ export default function ApiSettingsPage() {
            </div>
            <button 
              onClick={handleAdd}
-             className="w-full py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-2xl font-bold shadow-xl shadow-purple-600/20 transition-all active:scale-[0.98]"
+             className="w-full py-4 bg-[#AAA024] hover:bg-[#8f871e] text-white rounded-2xl font-bold shadow-xl shadow-[#AAA024]/20 transition-all active:scale-[0.98]"
            >
              Save New Property
            </button>
@@ -163,7 +163,7 @@ export default function ApiSettingsPage() {
 
       {loading ? (
         <div className="flex justify-center py-20">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-500"></div>
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#AAA024]"></div>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-6">
@@ -172,9 +172,9 @@ export default function ApiSettingsPage() {
               {editingId === prop.id ? (
                 <div className="space-y-4">
                   <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-xl font-bold text-purple-600">{prop.property_name}</h3>
+                    <h3 className="text-xl font-bold text-[#AAA024]">{prop.property_name}</h3>
                     <div className="flex gap-2">
-                       <button onClick={handleSave} className="px-4 py-1.5 bg-purple-600 text-white rounded-lg text-sm font-bold shadow-md shadow-purple-200">Save</button>
+                       <button onClick={handleSave} className="px-4 py-1.5 bg-[#AAA024] text-white rounded-lg text-sm font-bold shadow-md shadow-[#AAA024]/20">Save</button>
                        <button onClick={() => setEditingId(null)} className="px-4 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-lg text-sm font-bold">Cancel</button>
                     </div>
                   </div>
@@ -183,7 +183,7 @@ export default function ApiSettingsPage() {
                     <div className="flex flex-col gap-1">
                       <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest px-1">Property Name</label>
                       <input 
-                        className="bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500/20"
+                        className="bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#AAA024]/20"
                         value={editForm?.property_name}
                         onChange={(e) => setEditForm({...editForm!, property_name: e.target.value})}
                       />
@@ -191,7 +191,7 @@ export default function ApiSettingsPage() {
                     <div className="flex flex-col gap-1">
                       <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest px-1">Client Name</label>
                       <input 
-                        className="bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500/20"
+                        className="bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#AAA024]/20"
                         value={editForm?.client_name}
                         onChange={(e) => setEditForm({...editForm!, client_name: e.target.value})}
                       />
@@ -199,7 +199,7 @@ export default function ApiSettingsPage() {
                     <div className="flex flex-col gap-1">
                       <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest px-1">Client Token</label>
                       <input 
-                        className="bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-900 font-mono focus:outline-none focus:ring-2 focus:ring-purple-500/20"
+                        className="bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-900 font-mono focus:outline-none focus:ring-2 focus:ring-[#AAA024]/20"
                         value={editForm?.client_token}
                         onChange={(e) => setEditForm({...editForm!, client_token: e.target.value})}
                       />
@@ -207,7 +207,7 @@ export default function ApiSettingsPage() {
                     <div className="flex flex-col gap-1">
                       <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest px-1">Access Token</label>
                       <input 
-                        className="bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-900 font-mono focus:outline-none focus:ring-2 focus:ring-purple-500/20"
+                        className="bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-900 font-mono focus:outline-none focus:ring-2 focus:ring-[#AAA024]/20"
                         value={editForm?.access_token}
                         onChange={(e) => setEditForm({...editForm!, access_token: e.target.value})}
                       />

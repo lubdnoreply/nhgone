@@ -8,11 +8,11 @@ export default function AdminPage() {
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
         <div className="bg-slate-50 border border-slate-200 p-6 rounded-3xl shadow-sm">
-          <p className="text-[10px] font-bold text-purple-600 uppercase tracking-widest mb-1">Total Properties</p>
+          <p className="text-[10px] font-bold text-[#AAA024] uppercase tracking-widest mb-1">Total Properties</p>
           <p className="text-4xl font-black text-slate-900">9</p>
         </div>
         <div className="bg-slate-50 border border-slate-200 p-6 rounded-3xl shadow-sm">
-          <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-1">Active Sync</p>
+          <p className="text-[10px] font-bold text-[#AAA024] uppercase tracking-widest mb-1">Active Sync</p>
           <p className="text-4xl font-black text-slate-900">Online</p>
         </div>
       </div>

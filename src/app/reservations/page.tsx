@@ -69,7 +69,7 @@ export default function LiveDataPage() {
             <select 
               value={selectedProperty}
               onChange={(e) => setSelectedProperty(e.target.value)}
-              className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all appearance-none cursor-pointer hover:bg-white/10"
+              className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#AAA024] transition-all appearance-none cursor-pointer hover:bg-white/10"
             >
               {properties.map(p => <option key={p} value={p} className="bg-slate-900">{p}</option>)}
             </select>
@@ -84,7 +84,7 @@ export default function LiveDataPage() {
               onClick={() => setActiveSection(s)}
               className={`px-6 py-2 rounded-xl text-sm font-bold transition-all capitalize ${
                 activeSection === s 
-                ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20" 
+                ? "bg-[#AAA024] text-white shadow-lg shadow-[#AAA024]/20" 
                 : "text-slate-400 hover:text-white hover:bg-white/5"
               }`}
             >
@@ -100,7 +100,7 @@ export default function LiveDataPage() {
           </div>
         ) : loading ? (
           <div className="flex flex-col items-center justify-center py-24 gap-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500/20 border-t-blue-500"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#AAA024]/20 border-t-[#AAA024]"></div>
             <p className="text-slate-500 font-medium animate-pulse">Fetching {activeSection} data...</p>
           </div>
         ) : (

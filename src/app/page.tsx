@@ -51,7 +51,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#f0f2f5] p-4 font-sans text-[#1a1f36]">
       {/* Background soft gradient for extra premium feel */}
-      <div className="absolute inset-0 bg-gradient-to-tr from-blue-50/50 via-white to-emerald-50/50 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-tr from-[#AAA024]/5 via-white to-[#AAA024]/10 pointer-events-none" />
       
       <div className="relative w-full max-w-md bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-10 md:p-12 transition-all hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)]">
         <div className="flex flex-col items-center">
@@ -86,7 +86,7 @@ export default function LoginPage() {
             <div className="flex-grow border-t border-gray-100"></div>
             <button 
               onClick={() => setShowEmailLogin(!showEmailLogin)}
-              className="flex-shrink mx-4 text-[10px] font-bold tracking-widest text-[#6366f1] uppercase hover:text-[#4f46e5] transition-colors cursor-pointer focus:outline-none"
+              className="flex-shrink mx-4 text-[10px] font-bold tracking-widest text-[#AAA024] uppercase hover:text-[#8f871e] transition-colors cursor-pointer focus:outline-none"
             >
               {showEmailLogin ? "HIDE EMAIL OPTION" : "Or sign in with email"}
             </button>
@@ -105,7 +105,7 @@ export default function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@company.com" 
                   required
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#6366f1] focus:ring-2 focus:ring-[#6366f1]/20 outline-none transition-all text-sm text-[#1a1f36]"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#AAA024] focus:ring-2 focus:ring-[#AAA024]/20 outline-none transition-all text-sm text-[#1a1f36]"
                 />
               </div>
               <div className="space-y-1.5">
@@ -116,19 +116,19 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password" 
                   required
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#6366f1] focus:ring-2 focus:ring-[#6366f1]/20 outline-none transition-all text-sm text-[#1a1f36]"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#AAA024] focus:ring-2 focus:ring-[#AAA024]/20 outline-none transition-all text-sm text-[#1a1f36]"
                 />
               </div>
               <button 
                 type="submit"
                 disabled={loading}
-                className="w-full py-3.5 px-4 bg-[#6366f1] text-white rounded-xl text-sm font-semibold hover:bg-[#4f46e5] shadow-lg shadow-indigo-200 transition-all active:scale-[0.98] disabled:opacity-70 flex justify-center items-center"
+                className="w-full py-3.5 px-4 bg-[#AAA024] text-white rounded-xl text-sm font-semibold hover:bg-[#8f871e] shadow-lg shadow-[#AAA024]/20 transition-all active:scale-[0.98] disabled:opacity-70 flex justify-center items-center"
               >
                 {loading ? "Logging in..." : "Log In"}
               </button>
               
               <div className="text-center">
-                <a href="#" className="text-sm font-medium text-[#6366f1] hover:underline transition-all">
+                <a href="#" className="text-sm font-medium text-[#AAA024] hover:underline transition-all">
                   Need an account? Sign Up
                 </a>
               </div>
@@ -137,7 +137,7 @@ export default function LoginPage() {
           
           {!showEmailLogin && (
             <div className="mt-8 text-center text-xs text-gray-400">
-              New to NHG? <a href="#" className="text-[#6366f1] font-semibold hover:underline">Create an account</a>
+              New to NHG? <a href="#" className="text-[#AAA024] font-semibold hover:underline">Create an account</a>
             </div>
           )}
         </div>
