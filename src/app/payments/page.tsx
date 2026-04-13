@@ -18,13 +18,14 @@ export default function PaymentsPage() {
   const fetchPayments = async () => {
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:8000/payments/live");
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const response = await fetch(`${apiUrl}/payments/live`);
       const result = await response.json();
       if (result.status === "success") {
         setPayments(result.data);
       }
-    } catch (err) {
-      console.error("Fetch error", err);
+    } catch (err: any) {
+      console.warn("Fetch error", err.message);
     } finally {
       setLoading(false);
     }
@@ -33,14 +34,15 @@ export default function PaymentsPage() {
   const handleSync = async (payment: Payment) => {
     setSyncingId(payment.mews_id);
     try {
-      const response = await fetch("http://localhost:8000/payments/sync", {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const response = await fetch(`${apiUrl}/payments/sync`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payment),
       });
       const result = await response.json();
       if (result.status === "success") alert("Payment synced!");
-    } catch (err) {
+    } catch (err: any) {
       alert("Sync failed");
     } finally {
       setSyncingId(null);

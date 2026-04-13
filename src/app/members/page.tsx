@@ -19,13 +19,14 @@ export default function MembersPage() {
   const fetchMembers = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:8000/members/live?search=${search}`);
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const response = await fetch(`${apiUrl}/members/live?search=${search}`);
       const result = await response.json();
       if (result.status === "success") {
         setMembers(result.data);
       }
-    } catch (err) {
-      console.error("Fetch error", err);
+    } catch (err: any) {
+      console.warn("Could not fetch members:", err.message);
     } finally {
       setLoading(false);
     }
@@ -34,14 +35,15 @@ export default function MembersPage() {
   const handleSync = async (member: Member) => {
     setSyncingId(member.mews_id);
     try {
-      const response = await fetch("http://localhost:8000/members/sync", {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const response = await fetch(`${apiUrl}/members/sync`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(member),
       });
       const result = await response.json();
       if (result.status === "success") alert("Member synced!");
-    } catch (err) {
+    } catch (err: any) {
       alert("Sync failed");
     } finally {
       setSyncingId(null);

@@ -21,13 +21,15 @@ export default function ManagedReservationsPage() {
   const fetchManaged = async () => {
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:8000/reservations/managed");
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const response = await fetch(`${apiUrl}/reservations/managed`);
       const result = await response.json();
       if (result.status === "success") {
         setReservations(result.data);
       }
-    } catch (err) {
+    } catch (err: any) {
       setError("Failed to fetch managed data");
+      console.warn("Fetch error:", err.message);
     } finally {
       setLoading(false);
     }
@@ -35,7 +37,8 @@ export default function ManagedReservationsPage() {
 
   const handleUpdate = async (mews_id: string) => {
     try {
-      const response = await fetch(`http://localhost:8000/reservations/update/${mews_id}`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const response = await fetch(`${apiUrl}/reservations/update/${mews_id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ notes: tempNotes }),
@@ -45,8 +48,9 @@ export default function ManagedReservationsPage() {
         setReservations(reservations.map(r => r.mews_id === mews_id ? { ...r, notes: tempNotes } : r));
         setEditingId(null);
       }
-    } catch (err) {
+    } catch (err: any) {
       alert("Update failed");
+      console.warn("Update error:", err.message);
     }
   };
 

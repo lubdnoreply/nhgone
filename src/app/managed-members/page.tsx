@@ -18,13 +18,14 @@ export default function ManagedMembersPage() {
   const fetchManaged = async () => {
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:8000/members/managed");
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const response = await fetch(`${apiUrl}/members/managed`);
       const result = await response.json();
       if (result.status === "success") {
         setMembers(result.data);
       }
-    } catch (err) {
-      console.error("Fetch error", err);
+    } catch (err: any) {
+      console.warn("Could not fetch members:", err.message);
     } finally {
       setLoading(false);
     }

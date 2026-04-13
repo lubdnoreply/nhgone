@@ -18,7 +18,8 @@ export default function ManagedPaymentsPage() {
     setLoading(true);
     try {
       // Note: We'd need a backend route for /payments/managed as well
-      const response = await fetch("http://localhost:8000/payments/managed");
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const response = await fetch(`${apiUrl}/payments/managed`);
       const result = await response.json();
       if (result.status === "success") {
         setPayments(result.data);

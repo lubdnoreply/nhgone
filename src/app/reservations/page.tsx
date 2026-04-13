@@ -22,15 +22,17 @@ export default function ReservationsPage() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch("http://localhost:8000/reservations/live");
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const response = await fetch(`${apiUrl}/reservations/live`);
       const result = await response.json();
       if (result.status === "success") {
         setReservations(result.data);
       } else {
         setError(result.message || "Failed to fetch reservations");
       }
-    } catch (err) {
+    } catch (err: any) {
       setError("Backend server unreachable");
+      console.warn("Fetch error:", err.message);
     } finally {
       setLoading(false);
     }
@@ -39,7 +41,8 @@ export default function ReservationsPage() {
   const handleSync = async (reservation: Reservation) => {
     setSyncingId(reservation.mews_id);
     try {
-      const response = await fetch("http://localhost:8000/reservations/sync", {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const response = await fetch(`${apiUrl}/reservations/sync`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(reservation),
@@ -50,8 +53,9 @@ export default function ReservationsPage() {
       } else {
         alert("Sync failed: " + result.detail);
       }
-    } catch (err) {
+    } catch (err: any) {
       alert("Error syncing: Backend unreachable");
+      console.warn("Sync error:", err.message);
     } finally {
       setSyncingId(null);
     }
