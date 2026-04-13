@@ -17,6 +17,14 @@ export default function ApiSettingsPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<PropertySetting | null>(null);
 
+  const [isAdding, setIsAdding] = useState(false);
+  const [newForm, setNewForm] = useState({
+    property_name: "",
+    client_name: "XPossible Hotel Connec",
+    client_token: "",
+    access_token: ""
+  });
+
   const fetchSettings = async () => {
     setLoading(true);
     const { data, error } = await supabase
@@ -37,12 +45,33 @@ export default function ApiSettingsPage() {
     setEditForm({ ...prop });
   };
 
+  const handleAdd = async () => {
+    if (!newForm.property_name || !newForm.client_token || !newForm.access_token) {
+      alert("Please fill in all fields");
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("property_api_settings")
+      .insert([newForm])
+      .select();
+
+    if (!error) {
+      setSettings([...settings, data[0]].sort((a, b) => a.property_name.localeCompare(b.property_name)));
+      setIsAdding(false);
+      setNewForm({ property_name: "", client_name: "XPossible Hotel Connec", client_token: "", access_token: "" });
+    } else {
+      alert("Error adding property: " + error.message);
+    }
+  };
+
   const handleSave = async () => {
     if (!editForm) return;
 
     const { error } = await supabase
       .from("property_api_settings")
       .update({
+        property_name: editForm.property_name,
         client_name: editForm.client_name,
         client_token: editForm.client_token,
         access_token: editForm.access_token
@@ -57,12 +86,80 @@ export default function ApiSettingsPage() {
     }
   };
 
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this property?")) return;
+    const { error } = await supabase.from("property_api_settings").delete().eq("id", id);
+    if (!error) {
+      setSettings(settings.filter(s => s.id !== id));
+    }
+  };
+
   return (
-    <div className="p-8 bg-slate-950 min-h-screen text-white">
-      <header className="mb-10">
-        <h1 className="text-3xl font-extrabold tracking-tight mb-2">API Settings</h1>
-        <p className="text-slate-400">Configure MEWS API Credentials for each property</p>
+    <div className="p-8 bg-white min-h-screen text-slate-900">
+      <header className="mb-10 flex justify-between items-end">
+        <div>
+          <h1 className="text-3xl font-extrabold tracking-tight mb-2">API Settings</h1>
+          <p className="text-slate-500">Configure MEWS API Credentials for each property</p>
+        </div>
+        <button 
+          onClick={() => setIsAdding(!isAdding)}
+          className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${isAdding ? "bg-red-50 text-red-600 border border-red-200" : "bg-purple-600 text-white shadow-lg shadow-purple-600/20"}`}
+        >
+          {isAdding ? "Cancel" : "Add New Property"}
+        </button>
       </header>
+
+      {isAdding && (
+        <div className="mb-10 bg-slate-50 border border-slate-200 rounded-3xl p-8 animate-in slide-in-from-top-4 duration-300 shadow-sm">
+           <h3 className="text-xl font-bold mb-6 flex items-center gap-2 text-slate-800">
+             <div className="w-2 h-6 bg-purple-500 rounded-full"></div>
+             New Property Credentials
+           </h3>
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              <div className="space-y-1.5">
+                <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Property Name</label>
+                <input 
+                  placeholder="e.g. Lub d Koh Samui"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition-all text-slate-900"
+                  value={newForm.property_name}
+                  onChange={(e) => setNewForm({...newForm, property_name: e.target.value})}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Client Name</label>
+                <input 
+                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition-all text-slate-900"
+                  value={newForm.client_name}
+                  onChange={(e) => setNewForm({...newForm, client_name: e.target.value})}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Client Token</label>
+                <input 
+                  placeholder="Paste Client Token here..."
+                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition-all text-slate-900"
+                  value={newForm.client_token}
+                  onChange={(e) => setNewForm({...newForm, client_token: e.target.value})}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Access Token</label>
+                <input 
+                  placeholder="Paste Access Token here..."
+                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition-all text-slate-900"
+                  value={newForm.access_token}
+                  onChange={(e) => setNewForm({...newForm, access_token: e.target.value})}
+                />
+              </div>
+           </div>
+           <button 
+             onClick={handleAdd}
+             className="w-full py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-2xl font-bold shadow-xl shadow-purple-600/20 transition-all active:scale-[0.98]"
+           >
+             Save New Property
+           </button>
+        </div>
+      )}
 
       {loading ? (
         <div className="flex justify-center py-20">
@@ -71,38 +168,46 @@ export default function ApiSettingsPage() {
       ) : (
         <div className="grid grid-cols-1 gap-6">
           {settings.map((prop) => (
-            <div key={prop.id} className="bg-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur-xl transition-all hover:bg-white/[0.07]">
+            <div key={prop.id} className="bg-slate-50 border border-slate-200 rounded-3xl p-6 transition-all hover:bg-slate-100/50 shadow-sm">
               {editingId === prop.id ? (
                 <div className="space-y-4">
                   <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-xl font-bold text-purple-400">{prop.property_name}</h3>
+                    <h3 className="text-xl font-bold text-purple-600">{prop.property_name}</h3>
                     <div className="flex gap-2">
-                       <button onClick={handleSave} className="px-4 py-1.5 bg-purple-600 rounded-lg text-sm font-bold">Save Changes</button>
-                       <button onClick={() => setEditingId(null)} className="px-4 py-1.5 bg-white/10 rounded-lg text-sm font-bold">Cancel</button>
+                       <button onClick={handleSave} className="px-4 py-1.5 bg-purple-600 text-white rounded-lg text-sm font-bold shadow-md shadow-purple-200">Save</button>
+                       <button onClick={() => setEditingId(null)} className="px-4 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-lg text-sm font-bold">Cancel</button>
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="flex flex-col gap-1">
-                      <label className="text-[10px] text-slate-500 font-bold uppercase tracking-widest px-1">Client Name</label>
+                      <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest px-1">Property Name</label>
                       <input 
-                        className="bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-purple-500"
+                        className="bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500/20"
+                        value={editForm?.property_name}
+                        onChange={(e) => setEditForm({...editForm!, property_name: e.target.value})}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest px-1">Client Name</label>
+                      <input 
+                        className="bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500/20"
                         value={editForm?.client_name}
                         onChange={(e) => setEditForm({...editForm!, client_name: e.target.value})}
                       />
                     </div>
                     <div className="flex flex-col gap-1">
-                      <label className="text-[10px] text-slate-500 font-bold uppercase tracking-widest px-1">Client Token</label>
+                      <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest px-1">Client Token</label>
                       <input 
-                        className="bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-purple-500"
+                        className="bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-900 font-mono focus:outline-none focus:ring-2 focus:ring-purple-500/20"
                         value={editForm?.client_token}
                         onChange={(e) => setEditForm({...editForm!, client_token: e.target.value})}
                       />
                     </div>
                     <div className="flex flex-col gap-1">
-                      <label className="text-[10px] text-slate-500 font-bold uppercase tracking-widest px-1">Access Token</label>
+                      <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest px-1">Access Token</label>
                       <input 
-                        className="bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-purple-500"
+                        className="bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-900 font-mono focus:outline-none focus:ring-2 focus:ring-purple-500/20"
                         value={editForm?.access_token}
                         onChange={(e) => setEditForm({...editForm!, access_token: e.target.value})}
                       />
@@ -112,18 +217,26 @@ export default function ApiSettingsPage() {
               ) : (
                 <div className="flex justify-between items-center">
                   <div>
-                    <h3 className="text-xl font-bold mb-1">{prop.property_name}</h3>
+                    <h3 className="text-xl font-bold mb-1 text-slate-800">{prop.property_name}</h3>
                     <div className="flex gap-4 text-xs">
-                       <span className="text-slate-500">Client: <span className="text-slate-300">{prop.client_name}</span></span>
-                       <span className="text-slate-500">Access Token: <span className="text-slate-300 font-mono italic">***{prop.access_token.slice(-6)}</span></span>
+                       <span className="text-slate-500">Client: <span className="text-slate-700">{prop.client_name}</span></span>
+                       <span className="text-slate-500">Access Token: <span className="text-slate-700 font-mono italic">***{prop.access_token.slice(-6)}</span></span>
                     </div>
                   </div>
-                  <button 
-                    onClick={() => handleEdit(prop)}
-                    className="px-6 py-2 bg-white/5 hover:bg-white/10 rounded-xl text-sm font-bold border border-white/10 transition-all"
-                  >
-                    Edit Credentials
-                  </button>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => handleEdit(prop)}
+                      className="px-6 py-2 bg-white hover:bg-slate-50 text-slate-700 rounded-xl text-sm font-bold border border-slate-200 transition-all shadow-sm"
+                    >
+                      Edit
+                    </button>
+                    <button 
+                      onClick={() => handleDelete(prop.id)}
+                      className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-500 rounded-xl text-sm font-bold border border-red-100 transition-all shadow-sm"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

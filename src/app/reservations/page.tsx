@@ -1,28 +1,29 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-const PROPERTIES = [
-  "Lub d Phuket Patong",
-  "Lub d Bangkok Siam",
-  "Lub d Koh Samui Chaweng Beach",
-  "Lub d Philippines Makati",
-  "Lub d Siem Reap",
-  "Lub d Koh Tao Tanote Bay",
-  "Lub d Bangkok Chinatown",
-  "Marasca Samui"
-];
+import { supabase } from "@/lib/supabase";
 
 type Section = "reservations" | "members" | "payments";
 
 export default function LiveDataPage() {
   const [activeSection, setActiveSection] = useState<Section>("reservations");
-  const [selectedProperty, setSelectedProperty] = useState(PROPERTIES[0]);
+  const [properties, setProperties] = useState<string[]>([]);
+  const [selectedProperty, setSelectedProperty] = useState("");
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const fetchProperties = async () => {
+    const { data, error } = await supabase.from("property_api_settings").select("property_name").order("property_name");
+    if (data && data.length > 0) {
+      const names = data.map(p => p.property_name);
+      setProperties(names);
+      setSelectedProperty(names[0]);
+    }
+  };
+
   const fetchData = async () => {
+    if (!selectedProperty) return;
     setLoading(true);
     setError(null);
     try {
@@ -36,7 +37,7 @@ export default function LiveDataPage() {
       if (result.status === "success") {
         setData(result.data);
       } else {
-        setError(result.message || "Failed to fetch data");
+        setError(result.message || `Failed to fetch ${activeSection} data`);
       }
     } catch (err: any) {
       setError("Backend server unreachable");
@@ -47,13 +48,17 @@ export default function LiveDataPage() {
   };
 
   useEffect(() => {
+    fetchProperties();
+  }, []);
+
+  useEffect(() => {
     fetchData();
   }, [activeSection, selectedProperty]);
 
   return (
     <div className="flex-1 flex flex-col bg-slate-950 text-white p-8">
       <div className="max-w-7xl mx-auto w-full">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10 pr-16">
           <div>
             <h1 className="text-4xl font-extrabold tracking-tight">Live Data</h1>
             <p className="text-slate-400 mt-1">Direct one-way feed from MEWS PMS APIs</p>
@@ -66,7 +71,7 @@ export default function LiveDataPage() {
               onChange={(e) => setSelectedProperty(e.target.value)}
               className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all appearance-none cursor-pointer hover:bg-white/10"
             >
-              {PROPERTIES.map(p => <option key={p} value={p} className="bg-slate-900">{p}</option>)}
+              {properties.map(p => <option key={p} value={p} className="bg-slate-900">{p}</option>)}
             </select>
           </div>
         </div>

@@ -34,7 +34,7 @@ export default function UserHeader() {
   };
 
   // Mocking "Super Admin" check - you can change this to actual metadata check
-  const isSuperAdmin = user?.email === "noreply@lubd.com" || user?.user_metadata?.role === "super_admin" || user?.email?.includes("naraihospitality.com");
+  const isSuperAdmin = user?.email === "noreply@lubd.com" || user?.email === "businesstech@lubd.com" || user?.user_metadata?.role === "super_admin" || user?.email?.includes("naraihospitality.com");
 
   return (
     <div className="absolute top-8 right-8 z-50 font-sans">
