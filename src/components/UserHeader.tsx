@@ -11,10 +11,21 @@ export default function UserHeader() {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
+  const [profile, setProfile] = useState<any>(null);
+
   useEffect(() => {
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
+
+      if (user) {
+        const { data } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .single();
+        setProfile(data);
+      }
     };
     getUser();
 
@@ -33,8 +44,12 @@ export default function UserHeader() {
     router.push("/");
   };
 
-  // Mocking "Super Admin" check - you can change this to actual metadata check
-  const isSuperAdmin = user?.email === "noreply@lubd.com" || user?.email === "businesstech@lubd.com" || user?.user_metadata?.role === "super_admin" || user?.email?.includes("naraihospitality.com");
+  // Check Super Admin from Database role or specific domains
+  const isSuperAdmin = 
+    profile?.role === "Super Admin" || 
+    profile?.role === "super_admin" ||
+    user?.email === "noreply@lubd.com" || 
+    user?.email?.includes("naraihospitality.com");
 
   return (
     <div className="absolute top-8 right-8 z-50 font-sans">
