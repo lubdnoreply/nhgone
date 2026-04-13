@@ -16,13 +16,14 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await fetch("http://localhost:8000/stats");
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+        const response = await fetch(`${apiUrl}/stats`);
         const result = await response.json();
         if (result.status === "success") {
           setStats(result.data);
         }
-      } catch (err) {
-        console.error("Dashboard error", err);
+      } catch (err: any) {
+        console.warn("Could not fetch dashboard stats. Backend might be offline:", err.message);
       } finally {
         setLoading(false);
       }
