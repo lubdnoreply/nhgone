@@ -39,10 +39,41 @@ export default function AdminUsersPage() {
   };
 
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newUser, setNewUser] = useState({ email: "", password: "", role: "User", full_name: "" });
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  const handleCreateUser = async () => {
+    if (!newUser.email || !newUser.password) {
+      alert("Email and password are required");
+      return;
+    }
+    setCreating(true);
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const response = await fetch(`${apiUrl}/admin/users`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newUser)
+      });
+      const result = await response.json();
+      if (result.status === "success") {
+        setShowCreateModal(false);
+        setNewUser({ email: "", password: "", role: "User", full_name: "" });
+        fetchUsers();
+      } else {
+        alert("Error: " + (result.detail || result.message));
+      }
+    } catch (err: any) {
+      alert("Failed to connect to backend");
+    } finally {
+      setCreating(false);
+    }
+  };
 
   const handleSave = async () => {
     if (!editingUser) return;
@@ -86,9 +117,18 @@ export default function AdminUsersPage() {
 
   return (
     <div className="p-8 bg-white min-h-screen text-slate-900 font-sans relative">
-      <header className="mb-8">
-        <h1 className="text-3xl font-extrabold tracking-tight mb-2">User Management</h1>
-        <p className="text-slate-500 text-sm">Welcome back, Khemmarin Khuntong (UI). managing system as super_admin.</p>
+      <header className="mb-8 flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-extrabold tracking-tight mb-2 text-slate-900">User Management</h1>
+          <p className="text-slate-500 text-sm">Welcome back, Managing system as Super_admin.</p>
+        </div>
+        <button 
+          onClick={() => setShowCreateModal(true)}
+          className="px-6 py-2.5 bg-[#AAA024] text-white rounded-xl text-sm font-bold shadow-lg shadow-[#AAA024]/20 hover:bg-[#8f871e] transition-all flex items-center gap-2"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+          Create New User
+        </button>
       </header>
       
       {/* Search & Toolbar */}
@@ -99,7 +139,7 @@ export default function AdminUsersPage() {
               <input 
                 type="text"
                 placeholder="Search users..."
-                className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#AAA024]/10 transition-all"
+                className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#AAA024]/10 transition-all font-medium text-slate-900"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -247,6 +287,83 @@ export default function AdminUsersPage() {
                       Cancel
                     </button>
                  </div>
+              </div>
+           </div>
+        </div>
+      )}
+
+      {/* Create User Modal - Designed as per photo but integrated with Role */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
+           <div className="bg-[#1a1a1a] rounded-[24px] w-full max-w-[440px] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 border border-white/10 p-8">
+              <div className="flex justify-between items-center mb-8">
+                 <h2 className="text-xl font-bold text-white">Create a new user</h2>
+                 <button onClick={() => setShowCreateModal(false)} className="text-white/40 hover:text-white transition-colors">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                 </button>
+              </div>
+              
+              <div className="space-y-6">
+                 <div className="space-y-2">
+                    <label className="text-xs font-bold text-white/60 ml-1">Email address</label>
+                    <div className="relative">
+                       <div className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                       </div>
+                       <input 
+                         type="email"
+                         placeholder="user@gmail.com"
+                         className="w-full bg-white/5 border border-white/10 rounded-xl pl-11 pr-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#AAA024]/40 placeholder:text-white/20 transition-all"
+                         value={newUser.email}
+                         onChange={(e) => setNewUser({...newUser, email: e.target.value})}
+                       />
+                    </div>
+                 </div>
+
+                 <div className="space-y-2">
+                    <label className="text-xs font-bold text-white/60 ml-1">User Password</label>
+                    <div className="relative">
+                       <div className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 00-2 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                       </div>
+                       <input 
+                         type="password"
+                         placeholder="••••••••"
+                         className="w-full bg-white/5 border border-white/10 rounded-xl pl-11 pr-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#AAA024]/40 placeholder:text-white/20 transition-all"
+                         value={newUser.password}
+                         onChange={(e) => setNewUser({...newUser, password: e.target.value})}
+                       />
+                    </div>
+                 </div>
+
+                 <div className="space-y-2">
+                    <label className="text-xs font-bold text-white/60 ml-1">Assigned Role</label>
+                    <select 
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#AAA024]/40 appearance-none cursor-pointer transition-all"
+                      value={newUser.role}
+                      onChange={(e) => setNewUser({...newUser, role: e.target.value})}
+                    >
+                       <option value="User" className="bg-[#1a1a1a]">User</option>
+                       <option value="Super Admin" className="bg-[#1a1a1a]">Super Admin</option>
+                    </select>
+                 </div>
+
+                 <div className="flex items-center gap-3 ml-1">
+                    <input type="checkbox" defaultChecked className="w-4 h-4 rounded border-white/10 bg-white/5 text-[#AAA024] focus:ring-[#AAA024] cursor-pointer" />
+                    <label className="text-sm font-bold text-white/60">Auto Confirm User?</label>
+                 </div>
+
+                 <p className="text-[11px] text-white/40 leading-relaxed px-1">
+                    A confirmation email will not be sent when creating a user via this form as it will be auto-confirmed.
+                 </p>
+
+                 <button 
+                   onClick={handleCreateUser}
+                   disabled={creating}
+                   className="w-full bg-[#059669] hover:bg-[#047857] text-white rounded-xl py-3.5 text-sm font-extrabold shadow-xl shadow-emerald-900/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+                 >
+                   {creating ? "Creating user..." : "Create user"}
+                 </button>
               </div>
            </div>
         </div>

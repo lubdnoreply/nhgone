@@ -7,14 +7,22 @@ router = APIRouter(prefix="/payments", tags=["Payments"])
 
 @router.get("/live")
 async def get_live_payments(
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None),
     property_name: Optional[str] = Query(None)
 ):
     try:
-        # Note: Payments getAll often requires specific filters in MEWS
         payload = {
-            "Limitation": {"Count": 50}
+            "Limitation": {"Count": 100}
         }
-        response = await mews_client.post("/api/payments/getAll", payload, property_name=property_name)
+        
+        if start_date and end_date:
+            payload["CreatedUtc"] = {
+                "StartUtc": start_date,
+                "EndUtc": end_date
+            }
+            
+        response = await mews_client.post("/api/connector/v1/payments/getAll", payload, property_name=property_name)
         
         transformed = []
         for pay in response.get("Payments", []):

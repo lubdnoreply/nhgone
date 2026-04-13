@@ -2,12 +2,12 @@
 
 import DashboardView from "@/components/DashboardView";
 
-export default function ReservationsDatabasePage() {
+export default function LiveDataPage() {
   return (
     <DashboardView 
-      title="Reservation"
-      subtitle="Historical reservation data saved in NHGOne database"
-      defaultDataSource="saved"
+      title="Live Data"
+      subtitle="Direct one-way feed data from MEWS"
+      defaultDataSource="live"
       defaultSection="reservations"
       allowToggleDataSource={false}
     />

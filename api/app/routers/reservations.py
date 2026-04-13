@@ -15,53 +15,19 @@ async def get_live_reservations(
     property_name: Optional[str] = Query(None)
 ):
     """
-    Fetch live reservations from MEWS API ver 2023-06-06.
-    By default fetching for the last 24 hours if no dates provided.
+    Fetch live reservations and map them to the 58 columns Mews Reservation Report.
     """
     try:
-        if not start_date:
-            start_date = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat().replace("+00:00", "Z")
-        if not end_date:
-            end_date = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
-
-        # According to 2023-06-06 specification, we use CollidingUtc or CreatedUtc inside a nested object
-        payload = {
-            "CollidingUtc": {
-                "StartUtc": start_date,
-                "EndUtc": end_date
-            },
-            "States": ["Confirmed", "Started", "Processed"],
-            "Limitation": {
-                "Count": 100
-            }
-        }
-        
-        if cursor:
-            payload["Limitation"]["Cursor"] = cursor
-
-        # Updated endpoint to ver 2023-06-06
-        endpoint = "/api/connector/v1/reservations/getAll/2023-06-06"
-        response_data = await mews_client.post(endpoint, payload, property_name=property_name)
-        
-        # ver 2023-06-06 returns Reservations array. 
-        # Note: Customer mapping might require a separate call to customers/getAll if not included.
-        # However, for now we will map the accessible fields.
-        
-        transformed = []
-        for res in response_data.get("Reservations", []):
-            transformed.append({
-                "mews_id": res["Id"],
-                "guest_name": f"Account: {res.get('AccountId', 'Unknown')[:8]}...", # Temporary ID display
-                "status": res["State"],
-                "check_in": res.get("ScheduledStartUtc") or res.get("StartUtc"),
-                "check_out": res.get("ScheduledEndUtc") or res.get("EndUtc"),
-                "number": res.get("Number")
-            })
-
+        result = await sync_service.get_mapped_reservations(
+            property_name=property_name,
+            start_date=start_date,
+            end_date=end_date,
+            cursor=cursor
+        )
         return {
             "status": "success",
-            "data": transformed,
-            "cursor": response_data.get("Cursor")
+            "data": result["data"],
+            "cursor": result["cursor"]
         }
     except Exception as e:
         print(f"Error fetching reservations: {str(e)}")
@@ -81,27 +47,100 @@ async def get_managed_reservations():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/sync")
-async def sync_record(data: dict):
+@router.post("/sync-manual")
+async def sync_manual_reservations(payload: dict):
     """
-    Import a MEWS record into Supabase.
+    Manually import fetched reservations into the reservations_sync table.
     """
     try:
-        result = await sync_service.sync_reservation(data)
-        return {"status": "success", "data": result}
+        property_name = payload.get("property")
+        reservations_data = payload.get("data", [])
+        
+        if not sync_service.supabase:
+            raise Exception("Supabase not initialized")
+            
+        inserted = 0
+        skipped = 0
+        
+        # Prepare batch upsert
+        batch = []
+        for r in reservations_data:
+            mews_id = r.get("Identifier")
+            if not mews_id:
+                continue
+                
+            batch.append({
+                "mews_id": mews_id,
+                "property": property_name,
+                "data": r
+            })
+            
+        if batch:
+            # Using upsert without ignore_duplicates usually updates existing records
+            sync_service.supabase.table("reservations_sync").upsert(batch).execute()
+            inserted = len(batch)
+                
+        return {"status": "success", "inserted": inserted, "skipped": skipped}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.patch("/update/{mews_id}")
-async def update_managed_reservation(mews_id: str, data: dict):
+@router.get("/saved")
+async def get_saved_reservations(
+    property: str = None,
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None)
+):
     """
-    Update a managed reservation in Supabase.
+    Get synced reservations from Supabase with optional date filtering.
     """
     try:
         if not sync_service.supabase:
             raise Exception("Supabase not initialized")
+            
+        query = sync_service.supabase.table("reservations_sync").select("data, synced_at").order("synced_at", desc=True)
         
-        response = sync_service.supabase.table("reservations").update(data).eq("mews_id", mews_id).execute()
-        return {"status": "success", "data": response.data}
+        if property and property != "All" and property != "null":
+            query = query.eq("property", property)
+            
+        if start_date:
+            # Handle datetime-local format from frontend (e.g. 2024-04-13T00:00)
+            if "T" in start_date and not start_date.endswith("Z"):
+                start_date = f"{start_date}:00Z"
+            query = query.gte("synced_at", start_date)
+            
+        if end_date:
+            if "T" in end_date and not end_date.endswith("Z"):
+                end_date = f"{end_date}:00Z"
+            query = query.lte("synced_at", end_date)
+            
+        res = query.execute()
+        
+        # Inject synced_at into the data object for frontend display
+        data = []
+        for r in res.data:
+            item = r["data"]
+            item["Import Date"] = r["synced_at"]
+            data.append(item)
+            
+        return {"status": "success", "data": data}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.delete("/saved")
+async def delete_saved_reservations(payload: dict):
+    """
+    Delete multiple reservations from the sync table.
+    Expects format: {"mews_ids": ["id1", "id2", ...]}
+    """
+    try:
+        if not sync_service.supabase:
+            raise Exception("Supabase not initialized")
+            
+        ids = payload.get("mews_ids", [])
+        if not ids:
+            return {"status": "success", "deleted": 0}
+            
+        sync_service.supabase.table("reservations_sync").delete().in_("mews_id", ids).execute()
+        return {"status": "success", "deleted": len(ids)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

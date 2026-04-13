@@ -7,15 +7,25 @@ router = APIRouter(prefix="/members", tags=["Members"])
 
 @router.get("/live")
 async def get_live_members(
-    search: Optional[str] = Query(None),
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None),
     property_name: Optional[str] = Query(None)
 ):
+    """
+    Fetch live members (customers) from MEWS API.
+    """
     try:
         payload = {
-            "Emails": [search] if search else None,
-            "Limitation": {"Count": 50}
+            "Limitation": {"Count": 100}
         }
-        response = await mews_client.post("/api/customers/getAll", payload, property_name=property_name)
+        
+        if start_date and end_date:
+            payload["CreatedUtc"] = {
+                "StartUtc": start_date,
+                "EndUtc": end_date
+            }
+            
+        response = await mews_client.post("/api/connector/v1/customers/getAll", payload, property_name=property_name)
         
         transformed = []
         for cust in response.get("Customers", []):

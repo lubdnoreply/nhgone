@@ -33,13 +33,14 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
               <Link href="/admin" className={`px-4 py-2 hover:bg-white/5 rounded-lg transition-colors ${pathname === "/admin" ? "text-[#AAA024] font-medium bg-white/5" : "text-slate-400 hover:text-white"}`}>Dashboard</Link>
               <Link href="/admin/users" className={`px-4 py-2 hover:bg-white/5 rounded-lg transition-colors ${pathname === "/admin/users" ? "text-[#AAA024] font-medium bg-white/5" : "text-slate-400 hover:text-white"}`}>User Management</Link>
               <Link href="/admin/smtp" className={`px-4 py-2 hover:bg-white/5 rounded-lg transition-colors ${pathname === "/admin/smtp" ? "text-[#AAA024] font-medium bg-white/5" : "text-slate-400 hover:text-white"}`}>Email SMTP</Link>
+              <Link href="/admin/sync" className={`px-4 py-2 hover:bg-white/5 rounded-lg transition-colors ${pathname === "/admin/sync" ? "text-[#AAA024] font-medium bg-white/5" : "text-slate-400 hover:text-white"}`}>Sync and Import Schedule</Link>
               <Link href="/admin/api-settings" className={`px-4 py-2 hover:bg-white/5 rounded-lg transition-colors ${pathname === "/admin/api-settings" ? "text-[#AAA024] font-medium bg-white/5" : "text-slate-400 hover:text-white"}`}>API Setting</Link>
             </>
           ) : (
             <>
               <Link href="/dashboard" className={`px-4 py-2 hover:bg-white/5 rounded-lg transition-colors ${pathname === "/dashboard" ? "text-[#AAA024] font-medium bg-white/5" : "text-slate-400 hover:text-white"}`}>Dashboard</Link>
-              <Link href="/reservations" className={`px-4 py-2 hover:bg-white/5 rounded-lg transition-colors ${pathname === "/reservations" ? "text-[#AAA024] font-medium bg-white/5" : "text-slate-400 hover:text-white"}`}>Live Data</Link>
-              <Link href="/managed-data" className={`px-4 py-2 hover:bg-white/5 rounded-lg transition-colors ${pathname === "/managed-data" ? "text-[#AAA024] font-medium bg-white/5" : "text-slate-400 hover:text-white"}`}>Reservation</Link>
+              <Link href="/live-data" className={`px-4 py-2 hover:bg-white/5 rounded-lg transition-colors ${pathname === "/live-data" ? "text-[#AAA024] font-medium bg-white/5" : "text-slate-400 hover:text-white"}`}>Live Data</Link>
+              <Link href="/reservations" className={`px-4 py-2 hover:bg-white/5 rounded-lg transition-colors ${pathname === "/reservations" ? "text-[#AAA024] font-medium bg-white/5" : "text-slate-400 hover:text-white"}`}>Reservation</Link>
               <Link href="/members" className={`px-4 py-2 hover:bg-white/5 rounded-lg transition-colors ${pathname === "/members" ? "text-[#AAA024] font-medium bg-white/5" : "text-slate-400 hover:text-white"}`}>Member</Link>
               <Link href="/payments" className={`px-4 py-2 hover:bg-white/5 rounded-lg transition-colors ${pathname === "/payments" ? "text-[#AAA024] font-medium bg-white/5" : "text-slate-400 hover:text-white"}`}>Payment</Link>
             </>
