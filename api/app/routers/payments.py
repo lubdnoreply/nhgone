@@ -6,13 +6,15 @@ from typing import List, Optional
 router = APIRouter(prefix="/payments", tags=["Payments"])
 
 @router.get("/live")
-async def get_live_payments():
+async def get_live_payments(
+    property_name: Optional[str] = Query(None)
+):
     try:
         # Note: Payments getAll often requires specific filters in MEWS
         payload = {
             "Limitation": {"Count": 50}
         }
-        response = await mews_client.post("/api/payments/getAll", payload)
+        response = await mews_client.post("/api/payments/getAll", payload, property_name=property_name)
         
         transformed = []
         for pay in response.get("Payments", []):

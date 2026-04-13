@@ -11,7 +11,8 @@ router = APIRouter(prefix="/reservations", tags=["Reservations"])
 async def get_live_reservations(
     start_date: Optional[str] = Query(None),
     end_date: Optional[str] = Query(None),
-    cursor: Optional[str] = Query(None)
+    cursor: Optional[str] = Query(None),
+    property_name: Optional[str] = Query(None)
 ):
     """
     Fetch live reservations from MEWS API.
@@ -30,8 +31,9 @@ async def get_live_reservations(
             "States": ["Confirmed", "Started", "Processed", "CheckedIn", "CheckedOut"]
         }
 
-        response_data = await mews_client.post("/api/reservations/getAll", payload)
+        response_data = await mews_client.post("/api/reservations/getAll", payload, property_name=property_name)
         
+
         # Transform response for frontend (Basic version for now)
         # In a real app, we would map Reservation with Customer to get guest_name
         customers_map = {c["Id"]: f"{c.get('FirstName', '')} {c.get('LastName', '')}".strip() 

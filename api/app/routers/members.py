@@ -6,13 +6,16 @@ from typing import List, Optional
 router = APIRouter(prefix="/members", tags=["Members"])
 
 @router.get("/live")
-async def get_live_members(search: Optional[str] = Query(None)):
+async def get_live_members(
+    search: Optional[str] = Query(None),
+    property_name: Optional[str] = Query(None)
+):
     try:
         payload = {
             "Emails": [search] if search else None,
             "Limitation": {"Count": 50}
         }
-        response = await mews_client.post("/api/customers/getAll", payload)
+        response = await mews_client.post("/api/customers/getAll", payload, property_name=property_name)
         
         transformed = []
         for cust in response.get("Customers", []):

@@ -1,34 +1,42 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 
-interface Reservation {
-  mews_id: string;
-  guest_name: string;
-  status: string;
-  check_in: string;
-  check_out: string;
-}
+const PROPERTIES = [
+  "Lub d Phuket Patong",
+  "Lub d Bangkok Siam",
+  "Lub d Koh Samui Chaweng Beach",
+  "Lub d Philippines Makati",
+  "Lub d Siem Reap",
+  "Lub d Koh Tao Tanote Bay",
+  "Lub d Bangkok Chinatown",
+  "Marasca Samui"
+];
 
-export default function ReservationsPage() {
-  const [reservations, setReservations] = useState<Reservation[]>([]);
+type Section = "reservations" | "members" | "payments";
+
+export default function LiveDataPage() {
+  const [activeSection, setActiveSection] = useState<Section>("reservations");
+  const [selectedProperty, setSelectedProperty] = useState(PROPERTIES[0]);
+  const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [syncingId, setSyncingId] = useState<string | null>(null);
-
-  const fetchReservations = async () => {
+  const fetchData = async () => {
     setLoading(true);
     setError(null);
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-      const response = await fetch(`${apiUrl}/reservations/live`);
+      const endpoint = activeSection === "reservations" ? "/reservations/live" : 
+                       activeSection === "members" ? "/members/live" : "/payments/live";
+      
+      const response = await fetch(`${apiUrl}${endpoint}?property_name=${encodeURIComponent(selectedProperty)}`);
       const result = await response.json();
+      
       if (result.status === "success") {
-        setReservations(result.data);
+        setData(result.data);
       } else {
-        setError(result.message || "Failed to fetch reservations");
+        setError(result.message || "Failed to fetch data");
       }
     } catch (err: any) {
       setError("Backend server unreachable");
@@ -38,106 +46,131 @@ export default function ReservationsPage() {
     }
   };
 
-  const handleSync = async (reservation: Reservation) => {
-    setSyncingId(reservation.mews_id);
-    try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-      const response = await fetch(`${apiUrl}/reservations/sync`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(reservation),
-      });
-      const result = await response.json();
-      if (result.status === "success") {
-        alert("Synced successfully!");
-      } else {
-        alert("Sync failed: " + result.detail);
-      }
-    } catch (err: any) {
-      alert("Error syncing: Backend unreachable");
-      console.warn("Sync error:", err.message);
-    } finally {
-      setSyncingId(null);
-    }
-  };
-
   useEffect(() => {
-    fetchReservations();
-  }, []);
+    fetchData();
+  }, [activeSection, selectedProperty]);
 
   return (
     <div className="flex-1 flex flex-col bg-slate-950 text-white p-8">
       <div className="max-w-7xl mx-auto w-full">
-        <div className="flex justify-between items-center mb-10">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Reservations</h1>
-            <p className="text-slate-400 mt-1">Live data from MEWS API (Last 24 Hours)</p>
+            <h1 className="text-4xl font-extrabold tracking-tight">Live Data</h1>
+            <p className="text-slate-400 mt-1">Direct one-way feed from MEWS PMS APIs</p>
           </div>
-          <button 
-            onClick={fetchReservations}
-            disabled={loading}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg font-medium transition-colors disabled:opacity-50"
-          >
-            {loading ? "Refreshing..." : "Refresh"}
-          </button>
+          
+          <div className="flex flex-col gap-2 w-full md:w-auto">
+            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Select Property</label>
+            <select 
+              value={selectedProperty}
+              onChange={(e) => setSelectedProperty(e.target.value)}
+              className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all appearance-none cursor-pointer hover:bg-white/10"
+            >
+              {PROPERTIES.map(p => <option key={p} value={p} className="bg-slate-900">{p}</option>)}
+            </select>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-1 p-1 bg-white/5 rounded-2xl w-fit mb-8">
+          {(["reservations", "members", "payments"] as Section[]).map((s) => (
+            <button
+              key={s}
+              onClick={() => setActiveSection(s)}
+              className={`px-6 py-2 rounded-xl text-sm font-bold transition-all capitalize ${
+                activeSection === s 
+                ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20" 
+                : "text-slate-400 hover:text-white hover:bg-white/5"
+              }`}
+            >
+              {s}
+            </button>
+          ))}
         </div>
 
         {error ? (
-          <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl">
+          <div className="p-6 bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl flex items-center gap-3">
+             <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse"></div>
             {error}
           </div>
         ) : loading ? (
-          <div className="flex justify-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+          <div className="flex flex-col items-center justify-center py-24 gap-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500/20 border-t-blue-500"></div>
+            <p className="text-slate-500 font-medium animate-pulse">Fetching {activeSection} data...</p>
           </div>
         ) : (
-          <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md">
+          <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl">
             <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-white/10 bg-white/5">
-                  <th className="px-6 py-4 font-semibold text-slate-300">Guest Name</th>
-                  <th className="px-6 py-4 font-semibold text-slate-300">Status</th>
-                  <th className="px-6 py-4 font-semibold text-slate-300">Check In</th>
-                  <th className="px-6 py-4 font-semibold text-slate-300">Check Out</th>
-                  <th className="px-6 py-4 font-semibold text-slate-300 text-right">Actions</th>
-                </tr>
+              <thead className="bg-white/5">
+                {activeSection === "reservations" && (
+                  <tr>
+                    <th className="px-6 py-4 font-bold text-slate-300 text-xs uppercase tracking-wider">Guest Name</th>
+                    <th className="px-6 py-4 font-bold text-slate-300 text-xs uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-4 font-bold text-slate-300 text-xs uppercase tracking-wider">Check In</th>
+                    <th className="px-6 py-4 font-bold text-slate-300 text-xs uppercase tracking-wider">Check Out</th>
+                  </tr>
+                )}
+                {activeSection === "members" && (
+                  <tr>
+                    <th className="px-6 py-4 font-bold text-slate-300 text-xs uppercase tracking-wider">Full Name</th>
+                    <th className="px-6 py-4 font-bold text-slate-300 text-xs uppercase tracking-wider">Email</th>
+                    <th className="px-6 py-4 font-bold text-slate-300 text-xs uppercase tracking-wider">Loyalty</th>
+                  </tr>
+                )}
+                {activeSection === "payments" && (
+                  <tr>
+                    <th className="px-6 py-4 font-bold text-slate-300 text-xs uppercase tracking-wider">Reference ID</th>
+                    <th className="px-6 py-4 font-bold text-slate-300 text-xs uppercase tracking-wider">Amount</th>
+                    <th className="px-6 py-4 font-bold text-slate-300 text-xs uppercase tracking-wider">Currency</th>
+                    <th className="px-6 py-4 font-bold text-slate-300 text-xs uppercase tracking-wider">Date</th>
+                  </tr>
+                )}
               </thead>
               <tbody className="divide-y divide-white/5">
-                {reservations.length === 0 ? (
+                {data.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-10 text-center text-slate-500">
-                      No reservations found for the selected period.
+                    <td colSpan={5} className="px-6 py-20 text-center text-slate-500 font-medium italic">
+                      No records found for this property.
                     </td>
                   </tr>
                 ) : (
-                  reservations.map((res) => (
-                    <tr key={res.mews_id} className="hover:bg-white/5 transition-colors group">
-                      <td className="px-6 py-4 font-medium">{res.guest_name}</td>
-                      <td className="px-6 py-4">
-                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                          res.status === 'Confirmed' ? 'bg-emerald-500/10 text-emerald-400' :
-                          res.status === 'CheckedIn' ? 'bg-blue-500/10 text-blue-400' :
-                          res.status === 'CheckedOut' ? 'bg-slate-500/10 text-slate-400' :
-                          'bg-amber-500/10 text-amber-400'
-                        }`}>
-                          {res.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-slate-400 text-sm">
-                        {new Date(res.check_in).toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4 text-slate-400 text-sm">
-                        {new Date(res.check_out).toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <button 
-                          onClick={() => handleSync(res)}
-                          disabled={syncingId === res.mews_id}
-                          className="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-md text-sm font-medium transition-all transform group-hover:scale-105 active:scale-95 disabled:opacity-50"
-                        >
-                          {syncingId === res.mews_id ? "Syncing..." : "Sync"}
-                        </button>
-                      </td>
+                  data.map((item, idx) => (
+                    <tr key={item.mews_id || idx} className="hover:bg-white/5 transition-colors group">
+                      {activeSection === "reservations" && (
+                        <>
+                          <td className="px-6 py-4 font-medium text-white">{item.guest_name}</td>
+                          <td className="px-6 py-4">
+                            <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-tighter ${
+                              item.status === 'Confirmed' ? 'bg-emerald-500/10 text-emerald-400' :
+                              item.status === 'CheckedIn' ? 'bg-blue-500/10 text-blue-400' :
+                              'bg-amber-500/10 text-amber-400'
+                            }`}>
+                              {item.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-slate-400 text-sm">{new Date(item.check_in).toLocaleDateString()}</td>
+                          <td className="px-6 py-4 text-slate-400 text-sm">{new Date(item.check_out).toLocaleDateString()}</td>
+                        </>
+                      )}
+                      {activeSection === "members" && (
+                        <>
+                          <td className="px-6 py-4 font-medium text-white">{item.full_name}</td>
+                          <td className="px-6 py-4 text-slate-400 text-sm">{item.email}</td>
+                          <td className="px-6 py-4">
+                            <span className="px-2 py-0.5 bg-indigo-500/10 text-indigo-400 rounded text-[10px] font-bold">
+                              {item.loyalty}
+                            </span>
+                          </td>
+                        </>
+                      )}
+                      {activeSection === "payments" && (
+                        <>
+                          <td className="px-6 py-4 font-mono text-xs text-slate-500">{item.mews_id.substring(0, 12)}...</td>
+                          <td className="px-6 py-4 font-bold text-white text-lg">{item.amount || 0}</td>
+                          <td className="px-6 py-4 text-slate-400 text-sm font-bold">{item.currency}</td>
+                          <td className="px-6 py-4 text-slate-400 text-sm">{new Date(item.processed_at).toLocaleDateString()}</td>
+                        </>
+                      )}
                     </tr>
                   ))
                 )}
