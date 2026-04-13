@@ -15,38 +15,47 @@ async def get_live_reservations(
     property_name: Optional[str] = Query(None)
 ):
     """
-    Fetch live reservations from MEWS API.
+    Fetch live reservations from MEWS API ver 2023-06-06.
     By default fetching for the last 24 hours if no dates provided.
     """
     try:
         if not start_date:
-            start_date = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
+            start_date = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat().replace("+00:00", "Z")
         if not end_date:
-            end_date = datetime.now(timezone.utc).isoformat()
+            end_date = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
+        # According to 2023-06-06 specification, we use CollidingUtc or CreatedUtc inside a nested object
         payload = {
-            "StartUtc": start_date,
-            "EndUtc": end_date,
-            "Cursor": cursor,
-            "States": ["Confirmed", "Started", "Processed", "CheckedIn", "CheckedOut"]
+            "CollidingUtc": {
+                "StartUtc": start_date,
+                "EndUtc": end_date
+            },
+            "States": ["Confirmed", "Started", "Processed"],
+            "Limitation": {
+                "Count": 100
+            }
         }
-
-        response_data = await mews_client.post("/api/reservations/getAll", payload, property_name=property_name)
         
+        if cursor:
+            payload["Limitation"]["Cursor"] = cursor
 
-        # Transform response for frontend (Basic version for now)
-        # In a real app, we would map Reservation with Customer to get guest_name
-        customers_map = {c["Id"]: f"{c.get('FirstName', '')} {c.get('LastName', '')}".strip() 
-                         for c in response_data.get("Customers", [])}
+        # Updated endpoint to ver 2023-06-06
+        endpoint = "/api/connector/v1/reservations/getAll/2023-06-06"
+        response_data = await mews_client.post(endpoint, payload, property_name=property_name)
+        
+        # ver 2023-06-06 returns Reservations array. 
+        # Note: Customer mapping might require a separate call to customers/getAll if not included.
+        # However, for now we will map the accessible fields.
         
         transformed = []
         for res in response_data.get("Reservations", []):
             transformed.append({
                 "mews_id": res["Id"],
-                "guest_name": customers_map.get(res["CustomerId"], "Unknown Guest"),
+                "guest_name": f"Account: {res.get('AccountId', 'Unknown')[:8]}...", # Temporary ID display
                 "status": res["State"],
-                "check_in": res["StartUtc"],
-                "check_out": res["EndUtc"],
+                "check_in": res.get("ScheduledStartUtc") or res.get("StartUtc"),
+                "check_out": res.get("ScheduledEndUtc") or res.get("EndUtc"),
+                "number": res.get("Number")
             })
 
         return {
@@ -55,6 +64,7 @@ async def get_live_reservations(
             "cursor": response_data.get("Cursor")
         }
     except Exception as e:
+        print(f"Error fetching reservations: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/managed")

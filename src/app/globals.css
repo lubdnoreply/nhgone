@@ -13,6 +13,7 @@
   --text-primary: #ffffff;
   --border-primary: rgba(255, 255, 255, 0.1);
   --bg-sidebar: #0f172a;
+  color-scheme: dark;
 }
 
 body {

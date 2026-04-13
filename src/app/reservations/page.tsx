@@ -12,16 +12,34 @@ export default function LiveDataPage() {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [startDate, setStartDate] = useState(() => {
-    const d = new Date();
-    d.setHours(0,0,0,0);
-    return d.toISOString().slice(0, 16);
-  });
-  const [endDate, setEndDate] = useState(() => {
-    const d = new Date();
-    d.setHours(23,59,59,999);
-    return d.toISOString().slice(0, 16);
-  });
+
+  const getPreviousDayRange = () => {
+    const now = new Date();
+    
+    // Previous Day 00:00 AM
+    const start = new Date(now);
+    start.setDate(now.getDate() - 1);
+    start.setHours(0, 0, 0, 0);
+    
+    // Current Day 12:00 AM (End of yesterday)
+    const end = new Date(now);
+    end.setHours(0, 0, 0, 0);
+    
+    return {
+      start: new Date(start.getTime() - (start.getTimezoneOffset() * 60000)).toISOString().slice(0, 16),
+      end: new Date(end.getTime() - (end.getTimezoneOffset() * 60000)).toISOString().slice(0, 16)
+    };
+  };
+
+  const initialRange = getPreviousDayRange();
+  const [startDate, setStartDate] = useState(initialRange.start);
+  const [endDate, setEndDate] = useState(initialRange.end);
+
+  const setPreviousDay = () => {
+    const range = getPreviousDayRange();
+    setStartDate(range.start);
+    setEndDate(range.end);
+  };
 
   const fetchProperties = async () => {
     const { data, error } = await supabase.from("property_api_settings").select("property_name").order("property_name");
@@ -41,7 +59,13 @@ export default function LiveDataPage() {
       const endpoint = activeSection === "reservations" ? "/reservations/live" : 
                        activeSection === "members" ? "/members/live" : "/payments/live";
       
-      const response = await fetch(`${apiUrl}${endpoint}?property_name=${encodeURIComponent(selectedProperty)}`);
+      const queryParams = new URLSearchParams({
+        property_name: selectedProperty,
+        start_date: startDate ? `${startDate}:00Z` : "",
+        end_date: endDate ? `${endDate}:00Z` : ""
+      });
+      
+      const response = await fetch(`${apiUrl}${endpoint}?${queryParams.toString()}`);
       const result = await response.json();
       
       if (result.status === "success") {
@@ -71,7 +95,7 @@ export default function LiveDataPage() {
         <div className="flex flex-col gap-6 mb-10">
           <div>
             <h1 className="text-4xl font-extrabold tracking-tight text-foreground">Live Data</h1>
-            <p className="text-slate-500 mt-1">Direct one-way feed from MEWS PMS APIs</p>
+            <p className="text-slate-500 mt-1">Direct one-way feed data from MEWS</p>
           </div>
           
           <div className="flex flex-wrap items-end gap-4">
@@ -114,13 +138,22 @@ export default function LiveDataPage() {
               />
             </div>
 
-            {/* Refresh Button */}
-            <button 
-              onClick={fetchData}
-              className="px-6 py-2.5 bg-[#AAA024] text-white rounded-xl text-sm font-bold shadow-lg shadow-[#AAA024]/20 hover:bg-[#8f871e] transition-all active:scale-[0.98] h-[42px]"
-            >
-              Fetch Data
-            </button>
+            {/* Quick Actions */}
+            <div className="flex gap-2">
+              <button 
+                onClick={setPreviousDay}
+                className="px-4 py-2.5 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-400 rounded-xl text-xs font-bold hover:bg-slate-200 dark:hover:bg-white/10 transition-all h-[42px]"
+              >
+                Previous Day
+              </button>
+
+              <button 
+                onClick={fetchData}
+                className="px-6 py-2.5 bg-[#AAA024] text-white rounded-xl text-sm font-bold shadow-lg shadow-[#AAA024]/20 hover:bg-[#8f871e] transition-all active:scale-[0.98] h-[42px]"
+              >
+                Fetch Data
+              </button>
+            </div>
           </div>
         </div>
 
@@ -195,7 +228,8 @@ export default function LiveDataPage() {
                           <td className="px-6 py-4">
                             <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-tighter ${
                               item.status === 'Confirmed' ? 'bg-emerald-500/10 text-emerald-400' :
-                              item.status === 'CheckedIn' ? 'bg-blue-500/10 text-blue-400' :
+                              item.status === 'Started' ? 'bg-blue-500/10 text-blue-400' :
+                              item.status === 'Processed' ? 'bg-slate-500/20 text-slate-400' :
                               'bg-amber-500/10 text-amber-400'
                             }`}>
                               {item.status}
