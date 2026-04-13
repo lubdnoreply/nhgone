@@ -64,6 +64,21 @@ export default function AdminUsersPage() {
     }
   };
 
+  const handleDelete = async (userId: string) => {
+    if (!confirm("Are you sure you want to delete this account? This action cannot be undone.")) return;
+
+    const { error } = await supabase
+      .from("profiles")
+      .delete()
+      .eq("id", userId);
+
+    if (error) {
+      alert("Error deleting user: " + error.message);
+    } else {
+      setUsers(users.filter(u => u.id !== userId));
+    }
+  };
+
   const filteredUsers = users.filter(u => 
     u.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
     u.email?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -111,14 +126,14 @@ export default function AdminUsersPage() {
                 <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Status</th>
                 <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Last Log-in</th>
                 <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Joined</th>
-                <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Actions</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr><td colSpan={7} className="py-20 text-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div></td></tr>
               ) : filteredUsers.map((user) => (
-                <tr key={user.id} className="hover:bg-slate-50/50 transition-colors">
+                <tr key={user.id} className="hover:bg-slate-50/50 transition-colors group">
                   <td className="px-6 py-5 text-sm font-bold text-slate-700">{user.full_name}</td>
                   <td className="px-6 py-5 text-sm text-blue-500 font-medium">{user.email}</td>
                   <td className="px-6 py-5">
@@ -142,13 +157,28 @@ export default function AdminUsersPage() {
                   <td className="px-6 py-5 text-xs text-slate-500 font-medium">
                     {new Date(user.created_at || user.joined_at).toLocaleDateString()}
                   </td>
-                  <td className="px-6 py-5">
-                     <button 
-                       onClick={() => setEditingUser(user)}
-                       className="px-4 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-lg text-xs font-bold hover:bg-slate-50 transition-all shadow-sm"
-                     >
-                       Edit Profile
+                  <td className="px-6 py-5 text-center relative overflow-visible group/actions">
+                     <button className="text-slate-300 hover:text-slate-600 transition-colors p-2 rounded-lg hover:bg-slate-100">
+                       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM18 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                      </button>
+                     
+                     {/* Action Dropdown Menu */}
+                     <div className="absolute right-0 top-12 w-48 bg-white border border-slate-200 rounded-2xl shadow-xl z-[100] hidden group-hover/actions:block animate-in fade-in zoom-in-95 duration-100 p-1.5">
+                        <button 
+                          onClick={() => setEditingUser(user)}
+                          className="w-full text-left px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 rounded-xl transition-colors flex items-center gap-2"
+                        >
+                          <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                          Edit Profile
+                        </button>
+                        <button 
+                          onClick={() => handleDelete(user.id)}
+                          className="w-full text-left px-3 py-2 text-xs font-bold text-red-500 hover:bg-red-50 rounded-xl transition-colors flex items-center gap-2"
+                        >
+                          <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                          Delete Account
+                        </button>
+                     </div>
                   </td>
                 </tr>
               ))}

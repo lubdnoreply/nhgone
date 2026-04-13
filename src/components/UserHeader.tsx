@@ -44,12 +44,10 @@ export default function UserHeader() {
     router.push("/");
   };
 
-  // Check Super Admin from Database role or specific domains
+  // Check Super Admin ONLY from Database role
   const isSuperAdmin = 
     profile?.role === "Super Admin" || 
-    profile?.role === "super_admin" ||
-    user?.email === "noreply@lubd.com" || 
-    user?.email?.includes("naraihospitality.com");
+    profile?.role === "super_admin";
 
   return (
     <div className="absolute top-8 right-8 z-50 font-sans">
