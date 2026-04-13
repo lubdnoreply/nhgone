@@ -12,6 +12,16 @@ export default function LiveDataPage() {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [startDate, setStartDate] = useState(() => {
+    const d = new Date();
+    d.setHours(0,0,0,0);
+    return d.toISOString().slice(0, 16);
+  });
+  const [endDate, setEndDate] = useState(() => {
+    const d = new Date();
+    d.setHours(23,59,59,999);
+    return d.toISOString().slice(0, 16);
+  });
 
   const fetchProperties = async () => {
     const { data, error } = await supabase.from("property_api_settings").select("property_name").order("property_name");
@@ -64,20 +74,53 @@ export default function LiveDataPage() {
             <p className="text-slate-500 mt-1">Direct one-way feed from MEWS PMS APIs</p>
           </div>
           
-          <div className="flex flex-col gap-2 w-full max-w-xs">
-            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Select Property</label>
-            <div className="relative group">
-              <select 
-                value={selectedProperty}
-                onChange={(e) => setSelectedProperty(e.target.value)}
-                className="w-full bg-slate-100/10 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#AAA024] transition-all appearance-none cursor-pointer hover:bg-slate-200/20 dark:hover:bg-white/10 text-foreground"
-              >
-                {properties.map(p => <option key={p} value={p} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{p}</option>)}
-              </select>
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+          <div className="flex flex-wrap items-end gap-4">
+            {/* Property Select */}
+            <div className="flex flex-col gap-2 w-full md:w-64">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Select Property</label>
+              <div className="relative group">
+                <select 
+                  value={selectedProperty}
+                  onChange={(e) => setSelectedProperty(e.target.value)}
+                  className="w-full bg-slate-100/10 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#AAA024] transition-all appearance-none cursor-pointer hover:bg-slate-200/20 dark:hover:bg-white/10 text-foreground shadow-sm"
+                >
+                  {properties.map(p => <option key={p} value={p} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{p}</option>)}
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                </div>
               </div>
             </div>
+
+            {/* Start Date */}
+            <div className="flex flex-col gap-2 w-full md:w-48">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Start Date & Time</label>
+              <input 
+                type="datetime-local"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full bg-slate-100/10 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#AAA024] transition-all text-foreground shadow-sm"
+              />
+            </div>
+
+            {/* End Date */}
+            <div className="flex flex-col gap-2 w-full md:w-48">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">End Date & Time</label>
+              <input 
+                type="datetime-local"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-full bg-slate-100/10 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#AAA024] transition-all text-foreground shadow-sm"
+              />
+            </div>
+
+            {/* Refresh Button */}
+            <button 
+              onClick={fetchData}
+              className="px-6 py-2.5 bg-[#AAA024] text-white rounded-xl text-sm font-bold shadow-lg shadow-[#AAA024]/20 hover:bg-[#8f871e] transition-all active:scale-[0.98] h-[42px]"
+            >
+              Fetch Data
+            </button>
           </div>
         </div>
 
