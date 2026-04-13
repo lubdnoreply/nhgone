@@ -25,6 +25,7 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
           <Link href="/managed-data" className={`px-4 py-2 hover:bg-white/5 rounded-lg transition-colors ${pathname === "/managed-data" ? "text-blue-400 font-medium bg-white/5" : "text-slate-400 hover:text-white"}`}>Managed Data</Link>
           <Link href="/members" className={`px-4 py-2 hover:bg-white/5 rounded-lg transition-colors ${pathname === "/members" ? "text-blue-400 font-medium bg-white/5" : "text-slate-400 hover:text-white"}`}>Members</Link>
           <Link href="/payments" className={`px-4 py-2 hover:bg-white/5 rounded-lg transition-colors ${pathname === "/payments" ? "text-blue-400 font-medium bg-white/5" : "text-slate-400 hover:text-white"}`}>Payments</Link>
+          <Link href="/reservations" className={`px-4 py-2 hover:bg-white/5 rounded-lg transition-colors ${pathname === "/reservations" && !pathname.includes('live') ? "text-blue-400 font-medium bg-white/5" : "text-slate-400 hover:text-white"}`}>Reservation</Link>
         </nav>
 
         <div className="mt-auto pb-4">
