@@ -23,4 +23,5 @@ COPY api/ .
 
 # Run the application
 # We use gunicorn with uvicorn workers for production stability
-CMD ["gunicorn", "app.main:app", "--workers", "1", "--worker-class", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000", "--timeout", "120"]
+# Port is dynamic to support Railway deployment
+CMD gunicorn app.main:app --workers 1 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:${PORT:-8000} --timeout 120
