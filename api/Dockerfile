@@ -15,8 +15,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Install dependencies
+# Explicitly install to ensure they are in the PATH
 COPY api/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir gunicorn uvicorn fastapi pydantic pydantic-settings httpx supabase python-dotenv apscheduler uvloop
 
 # Copy project
 COPY api/ .
