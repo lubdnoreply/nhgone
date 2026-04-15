@@ -356,7 +356,7 @@ export default function DashboardView({
           }
         };
         triggerInitialFetch();
-      } else {
+      } else if (dataSource === "saved") {
         fetchData();
       }
     }
