@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import PageHeader from "@/components/PageHeader";
 
 interface PropertySyncSettings {
   id: string;
@@ -26,9 +27,11 @@ export default function AdminSyncPage() {
       const result = await response.json();
       if (result.status === "success") {
         setProperties(result.data);
+      } else {
+        console.error("API error response:", result);
       }
-    } catch (err) {
-      console.error("Failed to fetch properties", err);
+    } catch (err: any) {
+      console.error("Connection failed: Backend server is likely offline (Check run_backend.bat)", err.message);
     } finally {
       setLoading(false);
     }
@@ -86,16 +89,15 @@ export default function AdminSyncPage() {
 
   return (
     <div className="p-8 bg-white min-h-screen text-slate-900 font-sans relative">
-      <header className="mb-8 flex justify-between items-start pr-36">
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight mb-2 text-slate-900">Auto Import Schedule</h1>
-          <p className="text-slate-500 text-sm">Manage automated daily synchronization schedules for each property.</p>
-        </div>
+      <PageHeader 
+        title="Auto Import Schedule" 
+        description="Manage automated daily synchronization schedules for each property."
+      >
         <div className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-xl border border-slate-200">
            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
            <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Scheduler Active (Asia/Bangkok)</span>
         </div>
-      </header>
+      </PageHeader>
 
       <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden mb-6">
         <div className="p-4 flex items-center justify-between border-b border-slate-100 bg-slate-50/50">

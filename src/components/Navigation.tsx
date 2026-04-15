@@ -29,7 +29,6 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
         <nav className="flex flex-col gap-2">
           {pathname.startsWith("/admin") ? (
             <>
-              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-4 mb-2">Admin Menu</div>
               <Link href="/admin" className={`px-4 py-2 hover:bg-white/5 rounded-lg transition-colors ${pathname === "/admin" ? "text-[#AAA024] font-medium bg-white/5" : "text-slate-400 hover:text-white"}`}>Dashboard</Link>
               <Link href="/admin/users" className={`px-4 py-2 hover:bg-white/5 rounded-lg transition-colors ${pathname === "/admin/users" ? "text-[#AAA024] font-medium bg-white/5" : "text-slate-400 hover:text-white"}`}>User Management</Link>
               <Link href="/admin/smtp" className={`px-4 py-2 hover:bg-white/5 rounded-lg transition-colors ${pathname === "/admin/smtp" ? "text-[#AAA024] font-medium bg-white/5" : "text-slate-400 hover:text-white"}`}>Email SMTP</Link>
@@ -60,7 +59,6 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
         </div>
       </aside>
       <main className="flex-1 flex flex-col h-screen overflow-hidden relative">
-        <UserHeader />
         <div className="flex-1 overflow-y-auto w-full">
           {children}
         </div>

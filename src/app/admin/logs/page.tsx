@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import PageHeader from "@/components/PageHeader";
 import { supabase } from "@/lib/supabase";
 import { format } from "date-fns";
 
@@ -53,15 +54,10 @@ export default function ActivityLogPage() {
   return (
     <div className="flex-1 p-8 bg-[#f8f9fa] font-sans h-full overflow-auto">
       <div className="max-w-6xl mx-auto">
-        <div className="mb-8 flex items-center justify-between pr-36">
-          <div>
-            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
-              Activity Log
-            </h1>
-            <p className="text-slate-500 text-sm">
-              Monitor background automated sync jobs and operational activities
-            </p>
-          </div>
+        <PageHeader 
+          title="Activity Log" 
+          description="Monitor background automated sync jobs and operational activities"
+        >
           <button 
             onClick={() => {
               setLoading(true);
@@ -73,7 +69,7 @@ export default function ActivityLogPage() {
             <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
             Refresh
           </button>
-        </div>
+        </PageHeader>
 
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
           <div className="overflow-x-auto">

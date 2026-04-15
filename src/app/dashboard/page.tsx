@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import PageHeader from "@/components/PageHeader";
 
 interface Stats {
   reservations: number;
@@ -34,12 +35,10 @@ export default function Dashboard() {
   return (
     <div className="flex-1 p-8 bg-slate-950 font-sans">
       <div className="max-w-7xl mx-auto">
-        <header className="mb-12">
-          <h1 className="text-4xl font-extrabold text-white tracking-tight mb-2">
-            Welcome to <span className="bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">NHGOne</span>
-          </h1>
-          <p className="text-slate-400 text-lg">Your Unified Managed Layer for MEWS PMS </p>
-        </header>
+        <PageHeader 
+          title="Dashboard" 
+          description="Your Unified Managed Layer for MEWS PMS"
+        />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
           <StatCard title="Managed Reservations" value={stats?.reservations ?? 0} color="blue" href="/managed-data" />

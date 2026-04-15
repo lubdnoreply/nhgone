@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import PageHeader from "@/components/PageHeader";
 
 interface UserProfile {
   id: string;
@@ -117,11 +118,10 @@ export default function AdminUsersPage() {
 
   return (
     <div className="p-8 bg-white min-h-screen text-slate-900 font-sans relative">
-      <header className="mb-8 flex justify-between items-start pr-36">
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight mb-2 text-slate-900">User Management</h1>
-          <p className="text-slate-500 text-sm">Welcome back, Managing system as Super_admin.</p>
-        </div>
+      <PageHeader 
+        title="User Management" 
+        description="Welcome back, Managing system as Super_admin."
+      >
         <button 
           onClick={() => setShowCreateModal(true)}
           className="px-6 py-2.5 bg-[#AAA024] text-white rounded-xl text-sm font-bold shadow-lg shadow-[#AAA024]/20 hover:bg-[#8f871e] transition-all flex items-center gap-2"
@@ -129,7 +129,7 @@ export default function AdminUsersPage() {
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
           Create New User
         </button>
-      </header>
+      </PageHeader>
       
       {/* Search & Toolbar */}
       <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden mb-6">

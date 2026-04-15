@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import PageHeader from "@/components/PageHeader";
 
 interface PropertySetting {
   id: string;
@@ -96,18 +97,17 @@ export default function ApiSettingsPage() {
 
   return (
     <div className="p-8 bg-white min-h-screen text-slate-900">
-      <header className="mb-10 flex justify-between items-end pr-36">
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight mb-2">API Settings</h1>
-          <p className="text-slate-500">Configure MEWS API Credentials for each property</p>
-        </div>
+      <PageHeader 
+        title="API Settings" 
+        description="Configure MEWS API Credentials for each property"
+      >
         <button 
           onClick={() => setIsAdding(!isAdding)}
           className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${isAdding ? "bg-red-50 text-red-600 border border-red-200" : "bg-[#AAA024] text-white shadow-lg shadow-[#AAA024]/20"}`}
         >
           {isAdding ? "Cancel" : "Add New Property"}
         </button>
-      </header>
+      </PageHeader>
 
       {isAdding && (
         <div className="mb-10 bg-slate-50 border border-slate-200 rounded-3xl p-8 animate-in slide-in-from-top-4 duration-300 shadow-sm">

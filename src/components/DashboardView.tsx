@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import PageHeader from "./PageHeader";
 import * as XLSX from 'xlsx';
 import ImportChart from "./ImportChart";
 
@@ -364,38 +365,31 @@ export default function DashboardView({
   return (
     <div className="flex-1 flex flex-col bg-background text-foreground p-8 transition-colors duration-300">
       <div className="max-w-7xl mx-auto w-full">
-        <div className="flex flex-col gap-6 mb-10">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-extrabold tracking-tight text-foreground">
-                {title}
-              </h1>
-              <p className="text-slate-500 mt-1">
-                {subtitle}
-              </p>
+        <PageHeader 
+          title={title} 
+          description={subtitle}
+        >
+          {allowToggleDataSource && (
+            <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-full p-1">
+              <button
+                onClick={() => { setDataSource("live"); setData([]); setCurrentPage(1); }}
+                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
+                  dataSource === "live" ? "bg-emerald-500 text-white shadow-lg" : "text-slate-400 hover:text-white"
+                }`}
+              >
+                Live API
+              </button>
+              <button
+                onClick={() => { setDataSource("saved"); setData([]); setCurrentPage(1); }}
+                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
+                  dataSource === "saved" ? "bg-blue-500 text-white shadow-lg" : "text-slate-400 hover:text-white"
+                }`}
+              >
+                Database
+              </button>
             </div>
-            
-            {allowToggleDataSource && (
-              <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-full p-1">
-                <button
-                  onClick={() => { setDataSource("live"); setData([]); setCurrentPage(1); }}
-                  className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
-                    dataSource === "live" ? "bg-emerald-500 text-white shadow-lg" : "text-slate-400 hover:text-white"
-                  }`}
-                >
-                  Live API
-                </button>
-                <button
-                  onClick={() => { setDataSource("saved"); setData([]); setCurrentPage(1); }}
-                  className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
-                    dataSource === "saved" ? "bg-blue-500 text-white shadow-lg" : "text-slate-400 hover:text-white"
-                  }`}
-                >
-                  Database
-                </button>
-              </div>
-            )}
-          </div>
+          )}
+        </PageHeader>
           
           <div className="flex flex-wrap items-end gap-4">
             <div className="flex flex-col gap-2 w-full md:w-80">
@@ -436,7 +430,6 @@ export default function DashboardView({
               Fetch Data
             </button>
           </div>
-        </div>
 
         <div className="flex flex-wrap items-center justify-between gap-6 mb-8 bg-white/5 p-4 rounded-3xl border border-white/10 shadow-lg">
           <div className="flex gap-1 p-1 bg-black/20 rounded-2xl w-fit">
