@@ -2,7 +2,7 @@ import PageHeader from "@/components/PageHeader";
 
 export default function SMTPPage() {
   return (
-    <div className="p-8 bg-white min-h-screen text-slate-900">
+    <div className="p-6 bg-white min-h-screen text-slate-900 font-sans relative">
       <PageHeader 
         title="Email SMTP" 
         description="Configure email server settings for system notifications"

@@ -363,7 +363,7 @@ export default function DashboardView({
   }, [selectedProperty, dataSource, activeSection]);
 
   return (
-    <div className="flex-1 flex flex-col bg-background text-foreground p-8 transition-colors duration-300">
+    <div className="flex-1 flex flex-col bg-background text-foreground p-6 transition-colors duration-300">
       <div className="max-w-7xl mx-auto w-full">
         <PageHeader 
           title={title} 
@@ -391,7 +391,7 @@ export default function DashboardView({
           )}
         </PageHeader>
           
-          <div className="flex flex-wrap items-end gap-4">
+          <div className="flex flex-wrap items-end gap-4 mb-6">
             <div className="flex flex-col gap-2 w-full md:w-80">
               <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Select Property</label>
               <div className="relative group">
@@ -430,8 +430,7 @@ export default function DashboardView({
               Fetch Data
             </button>
           </div>
-
-        <div className="flex flex-wrap items-center justify-between gap-6 mb-8 bg-white/5 p-4 rounded-3xl border border-white/10 shadow-lg">
+<div className="flex flex-wrap items-center justify-between gap-6 mb-6 bg-white/5 p-4 rounded-3xl border border-white/10 shadow-lg">
           <div className="flex gap-1 p-1 bg-black/20 rounded-2xl w-fit">
             {(["reservations", "members", "payments"] as Section[]).map((s) => (
               <button

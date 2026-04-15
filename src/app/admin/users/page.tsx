@@ -117,7 +117,7 @@ export default function AdminUsersPage() {
   );
 
   return (
-    <div className="p-8 bg-white min-h-screen text-slate-900 font-sans relative">
+    <div className="p-6 bg-white min-h-screen text-slate-900 font-sans relative">
       <PageHeader 
         title="User Management" 
         description="Welcome back, Managing system as Super_admin."

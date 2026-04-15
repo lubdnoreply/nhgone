@@ -11,13 +11,13 @@ interface PageHeaderProps {
 
 export default function PageHeader({ title, description, children }: PageHeaderProps) {
   return (
-    <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
       <div>
-        <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 mb-2">
+        <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-2">
           {title}
         </h1>
         {description && (
-          <p className="text-slate-500 text-sm">
+          <p className="text-slate-500 dark:text-slate-400 text-sm">
             {description}
           </p>
         )}

@@ -88,7 +88,7 @@ export default function AdminSyncPage() {
   };
 
   return (
-    <div className="p-8 bg-white min-h-screen text-slate-900 font-sans relative">
+    <div className="p-6 bg-white min-h-screen text-slate-900 font-sans relative">
       <PageHeader 
         title="Auto Import Schedule" 
         description="Manage automated daily synchronization schedules for each property."
