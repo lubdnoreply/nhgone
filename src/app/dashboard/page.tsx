@@ -36,7 +36,11 @@ export default function Dashboard() {
     <div className="flex-1 p-8 bg-background text-foreground font-sans transition-colors duration-300">
       <div className="max-w-7xl mx-auto">
         <PageHeader 
-          title="Dashboard" 
+          title={
+            <>
+              Welcome to <span className="bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">NHGOne</span>
+            </>
+          } 
           description="Your Unified Managed Layer for MEWS PMS"
         />
 

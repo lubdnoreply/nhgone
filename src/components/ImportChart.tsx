@@ -18,8 +18,8 @@ export default function ImportChart({ data }: ImportChartProps) {
       <div className="w-full bg-white/5 border border-white/10 rounded-3xl p-6 shadow-2xl backdrop-blur-xl mt-6">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h3 className="text-xl font-bold text-white tracking-tight">Import Statistics</h3>
-            <p className="text-xs text-slate-400 mt-1">Number of reservations imported per day (Last 7 days)</p>
+            <h3 className="text-xl font-bold text-white tracking-tight">Import reservation Last 7 days</h3>
+            <p className="text-xs text-slate-400 mt-1">Number of reservations imported per day</p>
           </div>
         </div>
         <div className="h-[240px] flex items-center justify-center border-t border-white/5">
@@ -36,8 +36,8 @@ export default function ImportChart({ data }: ImportChartProps) {
     <div className="w-full bg-white/5 border border-white/10 rounded-3xl p-6 shadow-2xl backdrop-blur-xl mt-6">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h3 className="text-xl font-bold text-white tracking-tight">Import Statistics</h3>
-          <p className="text-xs text-slate-400 mt-1">Number of reservations imported per day (Last {data.length} days)</p>
+          <h3 className="text-xl font-bold text-white tracking-tight">Import reservation Last 7 days</h3>
+          <p className="text-xs text-slate-400 mt-1">Number of reservations imported per day</p>
         </div>
         <div className="flex items-center gap-2 px-3 py-1.5 bg-[#AAA024]/10 rounded-lg border border-[#AAA024]/20">
           <div className="w-2 h-2 rounded-full bg-[#AAA024] animate-pulse"></div>

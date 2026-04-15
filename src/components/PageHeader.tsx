@@ -4,7 +4,7 @@ import React from "react";
 import UserHeader from "./UserHeader";
 
 interface PageHeaderProps {
-  title: string;
+  title: React.ReactNode;
   description?: string;
   children?: React.ReactNode; // For action buttons, search, etc.
 }

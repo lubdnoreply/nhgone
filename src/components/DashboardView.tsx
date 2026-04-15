@@ -330,7 +330,7 @@ export default function DashboardView({
         // "Magic" pre-load: fetch 1 extra day but keep filter UI same
         const now = new Date();
         const magicStart = new Date(now);
-        magicStart.setDate(now.getDate() - 2); // 11th if today is 13th
+        magicStart.setDate(now.getDate() - 8); // Fetch 8 days to ensure 7 full days of stats
         magicStart.setHours(0, 0, 0, 0);
         const isoStart = new Date(magicStart.getTime() - (magicStart.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
         
