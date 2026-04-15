@@ -433,7 +433,7 @@ export default function DashboardView({
             </button>
           </div>
         <div className="flex flex-wrap items-center justify-between gap-6 mb-6 bg-white/5 p-4 rounded-3xl border border-white/10 shadow-lg">
-          {showSectionTabs ? (
+          {showSectionTabs && (
             <div className="flex gap-1 p-1 bg-black/20 rounded-2xl w-fit">
               {(["reservations", "members", "payments"] as Section[]).map((s) => (
                 <button
@@ -446,11 +446,6 @@ export default function DashboardView({
                   {s}
                 </button>
               ))}
-            </div>
-          ) : (
-            <div className="flex items-center gap-2 px-4 py-2 bg-[#AAA024]/10 rounded-2xl border border-[#AAA024]/20">
-              <div className="w-1.5 h-1.5 rounded-full bg-[#AAA024]"></div>
-              <span className="text-xs font-bold text-[#AAA024] capitalize">{activeSection} Data</span>
             </div>
           )}
 
