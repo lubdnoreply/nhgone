@@ -78,11 +78,30 @@ async def daily_auto_sync():
                 if batch:
                     # Upsert with service role to bypass RLS
                     sync_service.supabase.table("reservations_sync").upsert(batch).execute()
+                    
+                    sync_service.supabase.table("sync_logs").insert({
+                        "property": prop,
+                        "status": "success",
+                        "records_synced": len(batch),
+                        "message": "Successfully synced reservations"
+                    }).execute()
                     print(f"Successfully synced {len(batch)} reservations for {prop}")
                 else:
+                    sync_service.supabase.table("sync_logs").insert({
+                        "property": prop,
+                        "status": "success",
+                        "records_synced": 0,
+                        "message": "No reservations found to sync"
+                    }).execute()
                     print(f"No reservations found to sync for {prop}")
                     
             except Exception as prop_err:
+                sync_service.supabase.table("sync_logs").insert({
+                    "property": prop,
+                    "status": "error",
+                    "records_synced": 0,
+                    "message": str(prop_err)
+                }).execute()
                 print(f"Error syncing {prop}: {str(prop_err)}")
                 
     except Exception as e:

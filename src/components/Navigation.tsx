@@ -35,6 +35,7 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
               <Link href="/admin/smtp" className={`px-4 py-2 hover:bg-white/5 rounded-lg transition-colors ${pathname === "/admin/smtp" ? "text-[#AAA024] font-medium bg-white/5" : "text-slate-400 hover:text-white"}`}>Email SMTP</Link>
               <Link href="/admin/sync" className={`px-4 py-2 hover:bg-white/5 rounded-lg transition-colors ${pathname === "/admin/sync" ? "text-[#AAA024] font-medium bg-white/5" : "text-slate-400 hover:text-white"}`}>Sync and Import Schedule</Link>
               <Link href="/admin/api-settings" className={`px-4 py-2 hover:bg-white/5 rounded-lg transition-colors ${pathname === "/admin/api-settings" ? "text-[#AAA024] font-medium bg-white/5" : "text-slate-400 hover:text-white"}`}>API Setting</Link>
+              <Link href="/admin/logs" className={`px-4 py-2 hover:bg-white/5 rounded-lg transition-colors ${pathname === "/admin/logs" ? "text-[#AAA024] font-medium bg-white/5" : "text-slate-400 hover:text-white"}`}>Activity Log</Link>
             </>
           ) : (
             <>
