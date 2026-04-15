@@ -39,7 +39,7 @@ async def daily_auto_sync():
     print(f"[{now.isoformat()}] Checking for scheduled syncs at {current_hour:02d}:{current_minute:02d}...")
     
     if not sync_service.supabase:
-        print("Supabase not connected. Skipping sync.")
+        print(f"[{now.isoformat()}] [ERROR] Supabase client not initialized. Skipping automated sync.")
         return
         
     try:
@@ -91,6 +91,10 @@ async def daily_auto_sync():
 
 @app.on_event("startup")
 async def start_scheduler():
+    if not sync_service.supabase:
+        print("[CRITICAL] Cannot start scheduler: Supabase credentials missing or invalid.")
+        return
+
     # Run the check job every minute
     scheduler.add_job(daily_auto_sync, 'cron', second=0)
     scheduler.start()

@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+.git
+.gitignore
+Dockerfile
+run_backend.bat
+debug_*.py
+*.txt
+diff*.txt

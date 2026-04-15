@@ -6,3 +6,5 @@ httpx
 supabase
 python-dotenv
 apscheduler
+gunicorn
+uvloop
