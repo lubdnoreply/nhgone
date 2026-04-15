@@ -33,7 +33,7 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <div className="flex-1 p-8 bg-slate-950 font-sans">
+    <div className="flex-1 p-8 bg-background text-foreground font-sans transition-colors duration-300">
       <div className="max-w-7xl mx-auto">
         <PageHeader 
           title="Dashboard" 
@@ -46,19 +46,19 @@ export default function Dashboard() {
           <StatCard title="Processed Payments" value={stats?.payments ?? 0} color="amber" href="/managed-payments" />
         </div>
 
-        <section className="bg-white/5 border border-white/10 rounded-3xl p-8 backdrop-blur-xl">
-          <h2 className="text-2xl font-bold text-white mb-6">System Health</h2>
+        <section className="bg-slate-100/50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-3xl p-8 backdrop-blur-xl transition-colors">
+          <h2 className="text-2xl font-bold text-foreground mb-6">System Health</h2>
           <div className="flex items-center gap-4 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl w-fit">
             <div className="h-3 w-3 rounded-full bg-emerald-500 animate-pulse"></div>
             <span className="text-emerald-400 font-medium text-sm">FastAPI Backend: Online</span>
           </div>
-          <div className="mt-8 text-slate-400 grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="mt-8 text-slate-500 dark:text-slate-400 grid grid-cols-1 md:grid-cols-2 gap-8">
              <div>
-                <h3 className="text-white font-semibold mb-2">Integration Strategy</h3>
+                <h3 className="text-foreground font-semibold mb-2">Integration Strategy</h3>
                 <p className="text-sm leading-relaxed">Secure server-side token injection with POST-only pattern. No MEWS credentials are exposed to the browser.</p>
              </div>
              <div>
-                <h3 className="text-white font-semibold mb-2">Sync Pattern</h3>
+                <h3 className="text-foreground font-semibold mb-2">Sync Pattern</h3>
                 <p className="text-sm leading-relaxed">Local-first management layer in Supabase with RLS. Preserves enriched data while staying synced with PMS.</p>
              </div>
           </div>
