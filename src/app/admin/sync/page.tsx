@@ -86,9 +86,9 @@ export default function AdminSyncPage() {
 
   return (
     <div className="p-8 bg-white min-h-screen text-slate-900 font-sans relative">
-      <header className="mb-8 flex justify-between items-start">
+      <header className="mb-8 flex justify-between items-start pr-36">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight mb-2 text-slate-900">Sync and Import Schedule</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight mb-2 text-slate-900">Auto Import Schedule</h1>
           <p className="text-slate-500 text-sm">Manage automated daily synchronization schedules for each property.</p>
         </div>
         <div className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-xl border border-slate-200">
@@ -162,7 +162,7 @@ export default function AdminSyncPage() {
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
            <div className="bg-[#1a1a1a] rounded-[24px] w-full max-w-[440px] shadow-2xl overflow-hidden border border-white/10 p-8 animate-in fade-in zoom-in-95 duration-200">
               <div className="flex justify-between items-center mb-8">
-                 <h2 className="text-xl font-bold text-white">Edit Sync and Import Schedule</h2>
+                 <h2 className="text-xl font-bold text-white">Edit Auto Import Schedule</h2>
                  <button onClick={() => setEditingProperty(null)} className="text-white/40 hover:text-white transition-colors">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                  </button>

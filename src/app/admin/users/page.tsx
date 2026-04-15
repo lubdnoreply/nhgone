@@ -117,7 +117,7 @@ export default function AdminUsersPage() {
 
   return (
     <div className="p-8 bg-white min-h-screen text-slate-900 font-sans relative">
-      <header className="mb-8 flex justify-between items-start">
+      <header className="mb-8 flex justify-between items-start pr-36">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight mb-2 text-slate-900">User Management</h1>
           <p className="text-slate-500 text-sm">Welcome back, Managing system as Super_admin.</p>

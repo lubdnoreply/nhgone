@@ -96,7 +96,7 @@ export default function ApiSettingsPage() {
 
   return (
     <div className="p-8 bg-white min-h-screen text-slate-900">
-      <header className="mb-10 flex justify-between items-end">
+      <header className="mb-10 flex justify-between items-end pr-36">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight mb-2">API Settings</h1>
           <p className="text-slate-500">Configure MEWS API Credentials for each property</p>
