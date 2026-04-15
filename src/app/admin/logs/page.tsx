@@ -53,7 +53,7 @@ export default function ActivityLogPage() {
   return (
     <div className="flex-1 p-8 bg-[#f8f9fa] font-sans h-full overflow-auto">
       <div className="max-w-6xl mx-auto">
-        <div className="mb-8 flex items-center justify-between">
+        <div className="mb-8 flex items-center justify-between pr-40">
           <div>
             <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
               Activity Log

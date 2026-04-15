@@ -60,9 +60,7 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
         </div>
       </aside>
       <main className="flex-1 flex flex-col h-screen overflow-hidden relative">
-        <header className="h-16 flex items-center justify-end px-8 border-b border-border-primary shrink-0 bg-background/50 backdrop-blur-sm z-40">
-          <UserHeader />
-        </header>
+        <UserHeader />
         <div className="flex-1 overflow-y-auto w-full">
           {children}
         </div>

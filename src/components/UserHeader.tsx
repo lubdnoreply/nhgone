@@ -71,7 +71,7 @@ export default function UserHeader() {
     profile?.role === "super_admin";
 
   return (
-    <div className="z-50 font-sans">
+    <div className="absolute top-8 right-8 z-50 font-sans">
       <div className="relative" ref={dropdownRef}>
         <div className="flex items-center gap-3">
           {/* Theme Toggle Button */}
