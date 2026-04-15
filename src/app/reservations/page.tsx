@@ -10,6 +10,7 @@ export default function ReservationsDatabasePage() {
       defaultDataSource="saved"
       defaultSection="reservations"
       allowToggleDataSource={false}
+      showSectionTabs={false}
     />
   );
 }

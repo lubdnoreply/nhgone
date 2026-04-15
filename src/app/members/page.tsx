@@ -10,6 +10,7 @@ export default function MembersDatabasePage() {
       defaultDataSource="saved"
       defaultSection="members"
       allowToggleDataSource={false}
+      showSectionTabs={false}
     />
   );
 }

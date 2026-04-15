@@ -10,6 +10,7 @@ export default function PaymentsDatabasePage() {
       defaultDataSource="saved"
       defaultSection="payments"
       allowToggleDataSource={false}
+      showSectionTabs={false}
     />
   );
 }

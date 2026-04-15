@@ -15,6 +15,7 @@ interface DashboardViewProps {
   defaultDataSource: DataSource;
   defaultSection: Section;
   allowToggleDataSource?: boolean;
+  showSectionTabs?: boolean;
 }
 
 export default function DashboardView({ 
@@ -22,7 +23,8 @@ export default function DashboardView({
   subtitle, 
   defaultDataSource, 
   defaultSection,
-  allowToggleDataSource = false 
+  allowToggleDataSource = false,
+  showSectionTabs = true
 }: DashboardViewProps) {
   const [activeSection, setActiveSection] = useState<Section>(defaultSection);
   const [dataSource, setDataSource] = useState<DataSource>(defaultDataSource);
@@ -430,20 +432,27 @@ export default function DashboardView({
               Fetch Data
             </button>
           </div>
-<div className="flex flex-wrap items-center justify-between gap-6 mb-6 bg-white/5 p-4 rounded-3xl border border-white/10 shadow-lg">
-          <div className="flex gap-1 p-1 bg-black/20 rounded-2xl w-fit">
-            {(["reservations", "members", "payments"] as Section[]).map((s) => (
-              <button
-                key={s}
-                onClick={() => { setActiveSection(s); setCurrentPage(1); setSearchTerm(""); }}
-                className={`px-6 py-2 rounded-xl text-sm font-bold transition-all capitalize ${
-                  activeSection === s ? "bg-[#AAA024] text-white shadow-lg" : "text-slate-400 hover:text-white"
-                }`}
-              >
-                {s}
-              </button>
-            ))}
-          </div>
+        <div className="flex flex-wrap items-center justify-between gap-6 mb-6 bg-white/5 p-4 rounded-3xl border border-white/10 shadow-lg">
+          {showSectionTabs ? (
+            <div className="flex gap-1 p-1 bg-black/20 rounded-2xl w-fit">
+              {(["reservations", "members", "payments"] as Section[]).map((s) => (
+                <button
+                  key={s}
+                  onClick={() => { setActiveSection(s); setCurrentPage(1); setSearchTerm(""); }}
+                  className={`px-6 py-2 rounded-xl text-sm font-bold transition-all capitalize ${
+                    activeSection === s ? "bg-[#AAA024] text-white shadow-lg" : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 px-4 py-2 bg-[#AAA024]/10 rounded-2xl border border-[#AAA024]/20">
+              <div className="w-1.5 h-1.5 rounded-full bg-[#AAA024]"></div>
+              <span className="text-xs font-bold text-[#AAA024] capitalize">{activeSection} Data</span>
+            </div>
+          )}
 
           <div className="flex flex-1 flex-wrap items-center justify-end gap-4 min-w-[300px]">
             <div className="relative flex-1 max-w-md group">
