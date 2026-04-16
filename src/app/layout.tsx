@@ -16,6 +16,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "NHGOne | Narai Hospitality Group",
   description: "Unified admin dashboard and PMS managed layer.",
+  icons: {
+    icon: "https://guideline.lubd.com/wp-content/uploads/2025/11/NHG128-1.png",
+  },
 };
 
 import Navigation from "@/components/Navigation";
