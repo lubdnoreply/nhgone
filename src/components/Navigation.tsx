@@ -1,13 +1,85 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import UserHeader from "./UserHeader";
+import { supabase } from "@/lib/supabase";
 
 export default function Navigation({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const isLoginPage = pathname === "/";
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        if (!isLoginPage) {
+          router.push("/");
+          setIsAuthorized(false);
+        } else {
+          setIsAuthorized(true);
+        }
+        return;
+      }
+
+      // If user is logged in, must have a profile
+      const { data: profile, error } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("id", user.id)
+        .single();
+
+      if (error || !profile) {
+        if (!isLoginPage) {
+          console.warn("Unauthorized access attempt by", user.email);
+          await supabase.auth.signOut();
+          router.push("/?error=unauthorized");
+          setIsAuthorized(false);
+        } else {
+          setIsAuthorized(true);
+        }
+      } else {
+        // Authorized!
+        if (isLoginPage) {
+          router.push("/dashboard");
+        }
+        setIsAuthorized(true);
+      }
+    };
+
+    checkAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT') {
+        setIsAuthorized(false);
+        router.push("/");
+      } else if (event === 'SIGNED_IN') {
+        checkAuth();
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [pathname, isLoginPage, router]);
+
+  // Loading state to prevent flicker
+  if (isAuthorized === null && !isLoginPage) {
+    return (
+      <div className="h-screen w-full flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#AAA024]"></div>
+      </div>
+    );
+  }
+
+  // If not authorized and not on login page, don't show anything (redirect will happen)
+  if (!isAuthorized && !isLoginPage) {
+    return null;
+  }
 
   if (isLoginPage) {
     return <>{children}</>;
