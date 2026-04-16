@@ -2,23 +2,23 @@
 
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { getBaseUrl } from "@/lib/url";
+import { Suspense } from "react";
 
-export default function LoginPage() {
+function LoginContent() {
   const [showEmailLogin, setShowEmailLogin] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const router = useRouter();
+  const searchParams = useSearchParams();
   
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get("error") === "unauthorized") {
-      setErrorMsg("Unauthorized access. Your account is not registered in the system. Please contact BusinessTech Team");
-    }
-  }, []);
+  const isUnauthorized = searchParams.get("error") === "unauthorized";
+  const displayError = isUnauthorized 
+    ? "Unauthorized access. Your account is not registered in the system. Please contact BusinessTech Team"
+    : errorMsg;
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,10 +102,10 @@ export default function LoginPage() {
           </div>
 
           {/* Inline Error Message (Unauthorized) */}
-          {errorMsg && (
+          {(displayError) && (
             <div className="mb-8 text-center animate-in fade-in slide-in-from-top-1 duration-300">
               <p className="text-red-500 text-sm font-bold leading-relaxed whitespace-pre-line">
-                {errorMsg.split('. ').join('.\n')}
+                {displayError.split('. ').join('.\n')}
               </p>
             </div>
           )}
@@ -159,5 +159,17 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-[#f0f2f5]">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#AAA024]"></div>
+      </div>
+    }>
+      <LoginContent />
+    </Suspense>
   );
 }
