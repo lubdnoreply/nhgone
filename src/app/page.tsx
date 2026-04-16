@@ -11,14 +11,12 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
-  const [showUnauthorizedModal, setShowUnauthorizedModal] = useState(false);
   const router = useRouter();
   
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get("error") === "unauthorized") {
-      setShowUnauthorizedModal(true);
-      setErrorMsg("");
+      setErrorMsg("Unauthorized access. Your account is not registered in the system. Please contact BusinessTech Team");
     }
   }, []);
 
@@ -63,31 +61,6 @@ export default function LoginPage() {
       {/* Background soft gradient for extra premium feel */}
       <div className="absolute inset-0 bg-gradient-to-tr from-[#AAA024]/5 via-white to-[#AAA024]/10 pointer-events-none" />
       
-      {showUnauthorizedModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-300 border border-slate-100">
-            <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
-              <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-            </div>
-            <h3 className="text-xl font-bold text-slate-800 text-center mb-2">Unauthorized access</h3>
-            <p className="text-slate-500 text-center text-sm leading-relaxed mb-8">
-              Your account is not registered in the system. Please contact <span className="font-bold text-[#AAA024]">BusinessTech Team</span>
-            </p>
-            <button 
-              onClick={() => {
-                setShowUnauthorizedModal(false);
-                router.replace("/");
-              }}
-              className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold hover:bg-slate-800 transition-all active:scale-[0.98] shadow-lg shadow-slate-900/20"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
-      
       <div className="relative w-full max-w-md bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-10 md:p-12 transition-all hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)]">
         <div className="flex flex-col items-center">
           {/* Logo */}
@@ -128,10 +101,18 @@ export default function LoginPage() {
             <div className="flex-grow border-t border-gray-100"></div>
           </div>
 
+          {/* Inline Error Message (Unauthorized) */}
+          {errorMsg && (
+            <div className="mb-8 text-center animate-in fade-in slide-in-from-top-1 duration-300">
+              <p className="text-red-500 text-sm font-bold leading-relaxed whitespace-pre-line">
+                {errorMsg.split('. ').join('.\n')}
+              </p>
+            </div>
+          )}
+
           {/* Conditional Email Input */}
           {showEmailLogin && (
             <form onSubmit={handleEmailLogin} className="w-full space-y-5 animate-in fade-in slide-in-from-top-2 duration-300">
-              {errorMsg && <div className="text-red-500 text-sm text-center font-medium bg-red-50 p-2 rounded-lg">{errorMsg}</div>}
               <div className="space-y-1.5">
                 <label className="text-sm font-semibold text-gray-700 ml-1">Email Address</label>
                 <input 
