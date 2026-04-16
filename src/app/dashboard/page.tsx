@@ -45,9 +45,9 @@ export default function Dashboard() {
         />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-          <StatCard title="Managed Reservations" value={stats?.reservations ?? 0} color="blue" href="/managed-data" />
-          <StatCard title="Chinatown Members" value={stats?.members ?? 0} color="emerald" href="/managed-members" />
-          <StatCard title="Processed Payments" value={stats?.payments ?? 0} color="amber" href="/managed-payments" />
+          <StatCard title="Managed Reservations" value={stats?.reservations ?? 0} color="blue" href="/reservations" />
+          <StatCard title="Chinatown Members" value={stats?.members ?? 0} color="emerald" href="/members" />
+          <StatCard title="Processed Payments" value={stats?.payments ?? 0} color="amber" href="/payments" />
         </div>
 
         <section className="bg-slate-100/50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-3xl p-8 backdrop-blur-xl transition-colors">

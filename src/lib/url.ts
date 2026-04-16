@@ -3,12 +3,12 @@ export function getBaseUrl() {
     return window.location.origin;
   }
   
-  // Deployment URL (e.g. Vercel)
+  // 1. Explicit Deployment URL (Highest priority for custom domains)
   if (process.env.NEXT_PUBLIC_SITE_URL) {
     return process.env.NEXT_PUBLIC_SITE_URL;
   }
   
-  // Fallback for Vercel environments
+  // 2. Vercel System URL fallback
   if (process.env.VERCEL_URL) {
     return `https://${process.env.VERCEL_URL}`;
   }

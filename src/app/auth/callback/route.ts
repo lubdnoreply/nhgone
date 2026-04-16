@@ -6,9 +6,9 @@ export async function GET(request: Request) {
   const code = requestUrl.searchParams.get("code");
   const next = requestUrl.searchParams.get("next") ?? "/dashboard";
 
-  // Use the host header if available to determine the correct origin
+  // Force HTTPS on production domains, handle localhost properly
   const host = request.headers.get("host");
-  const protocol = requestUrl.protocol;
+  const protocol = host?.includes("localhost") ? "http:" : "https:";
   const origin = `${protocol}//${host}`;
 
   if (code) {
