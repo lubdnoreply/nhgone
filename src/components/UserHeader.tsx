@@ -25,11 +25,18 @@ export default function UserHeader() {
       setUser(user);
 
       if (user) {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from("profiles")
           .select("role, full_name")
           .eq("id", user.id)
           .single();
+        
+        if (error || !data) {
+          console.warn("Unauthorized access detected. No profile found for:", user.email);
+          await supabase.auth.signOut();
+          router.push("/?error=unauthorized");
+          return;
+        }
         setProfile(data);
       }
     };
