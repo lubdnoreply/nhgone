@@ -37,7 +37,7 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
         if (!isLoginPage) {
           console.warn("Unauthorized access attempt by", user.email);
           await supabase.auth.signOut();
-          router.push("/?error=unauthorized");
+          window.location.href = "/?error=unauthorized";
           setIsAuthorized(false);
         } else {
           setIsAuthorized(true);
