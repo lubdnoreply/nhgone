@@ -107,10 +107,10 @@ export default function UserHeader() {
         </div>
 
         {isOpen && (
-          <div className="absolute right-0 mt-3 w-72 bg-background rounded-2xl shadow-2xl border border-border-primary overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200 transform origin-top-right font-sans transition-colors duration-300">
+          <div className="absolute right-0 mt-3 w-80 bg-background rounded-2xl shadow-2xl border border-border-primary overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200 transform origin-top-right font-sans transition-colors duration-300">
             <div className={`p-6 border-b border-border-primary ${theme === 'dark' ? 'bg-white/5' : 'bg-slate-50'}`}>
                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Signed in as</p>
-               <p className="font-bold truncate text-foreground">{user?.email}</p>
+               <p className="text-xs font-bold text-foreground break-all">{user?.email}</p>
                <p className={`text-[11px] mt-1 font-bold inline-block px-2 py-0.5 rounded ${theme === 'dark' ? 'bg-[#AAA024]/20 text-[#AAA024]' : 'bg-[#AAA024] text-white'}`}>{profile?.role || "User"}</p>
             </div>
             
