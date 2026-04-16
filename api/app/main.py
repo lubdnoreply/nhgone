@@ -4,6 +4,7 @@ from app.config import settings
 from app.services.mews_client import mews_client
 from app.routers import reservations, members, payments, admin
 from app.services.sync_service import sync_service
+from app.services.encryption import encryption_service
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from zoneinfo import ZoneInfo
 import traceback
@@ -72,7 +73,7 @@ async def daily_auto_sync():
                         batch.append({
                             "mews_id": mews_id,
                             "property": prop,
-                            "data": r
+                            "data": encryption_service.encrypt_data(r)
                         })
                 
                 if batch:

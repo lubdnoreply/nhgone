@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Query
 from app.services.mews_client import mews_client
 from app.services.sync_service import sync_service
+from app.services.encryption import encryption_service
 from app.models.schemas import ReservationsRequest, ReservationsResponse
 from typing import List, Optional
 from datetime import datetime, timedelta, timezone
@@ -72,7 +73,7 @@ async def sync_manual_reservations(payload: dict):
             batch.append({
                 "mews_id": mews_id,
                 "property": property_name,
-                "data": r
+                "data": encryption_service.encrypt_data(r)
             })
             
         if batch:
@@ -118,7 +119,7 @@ async def get_saved_reservations(
         # Inject synced_at into the data object for frontend display
         data = []
         for r in res.data:
-            item = r["data"]
+            item = encryption_service.decrypt_data(r["data"])
             item["Import Date"] = r["synced_at"]
             data.append(item)
             

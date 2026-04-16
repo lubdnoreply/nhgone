@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     MEWS_CLIENT_TOKEN: str = ""
     MEWS_ACCESS_TOKEN: str = ""
     MEWS_BASE_URL: str = "https://api.mews-demo.com"
+    ENCRYPTION_KEY: str = ""
     
     class Config:
         env_file = ".env"

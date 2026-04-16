@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Query
 from app.services.mews_client import mews_client
 from app.services.sync_service import sync_service
+from app.services.encryption import encryption_service
 from typing import List, Optional
 
 router = APIRouter(prefix="/payments", tags=["Payments"])
@@ -42,7 +43,8 @@ async def sync_payment(data: dict):
     try:
         if not sync_service.supabase:
             raise Exception("Supabase not initialized")
-        res = sync_service.supabase.table("payments").upsert(data, on_conflict="mews_id").execute()
+        encrypted_data = encryption_service.encrypt_data(data)
+        res = sync_service.supabase.table("payments").upsert(encrypted_data, on_conflict="mews_id").execute()
         return {"status": "success", "data": res.data}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -53,6 +55,7 @@ async def get_managed_payments():
         if not sync_service.supabase:
             raise Exception("Supabase not initialized")
         res = sync_service.supabase.table("payments").select("*").order("processed_at", desc=True).execute()
-        return {"status": "success", "data": res.data}
+        decrypted_data = [encryption_service.decrypt_data(row) for row in res.data]
+        return {"status": "success", "data": decrypted_data}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
