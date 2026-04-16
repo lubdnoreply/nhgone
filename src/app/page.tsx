@@ -128,17 +128,17 @@ export default function LoginPage() {
                 {loading ? "Logging in..." : "Log In"}
               </button>
               
-              <div className="text-center">
-                <a href="#" className="text-sm font-medium text-[#AAA024] hover:underline transition-all">
-                  Need an account? Sign Up
-                </a>
+              <div className="text-center mt-4">
+                <span className="text-xs font-medium text-gray-500">
+                  Access is restricted to authorized NHG personnel only.
+                </span>
               </div>
             </form>
           )}
           
           {!showEmailLogin && (
-            <div className="mt-8 text-center text-xs text-gray-400">
-              New to NHG? <a href="#" className="text-[#AAA024] font-semibold hover:underline">Create an account</a>
+            <div className="mt-8 text-center text-xs text-gray-400 font-medium">
+              Access is restricted to authorized NHG personnel only.
             </div>
           )}
         </div>
