@@ -12,7 +12,9 @@ SENSITIVE_FIELDS = {
     # Members
     "full_name", "email", "phone", "address",
     # Payments
-    "payer_name", "card_number", "card_holder"
+    "payer_name", "card_number", "card_holder",
+    # API Settings
+    "client_name", "client_token", "access_token"
 }
 
 class EncryptionService:

@@ -1,5 +1,6 @@
 import httpx
 from app.config import settings, get_supabase_client
+from app.services.encryption import encryption_service
 from fastapi import HTTPException
 
 class MewsClient:
@@ -18,7 +19,10 @@ class MewsClient:
         if not response.data:
             raise HTTPException(status_code=400, detail=f"API credentials not found for property: {property_name}")
         
-        return response.data[0]["client_token"], response.data[0]["access_token"]
+        client_token = encryption_service.decrypt(response.data[0]["client_token"])
+        access_token = encryption_service.decrypt(response.data[0]["access_token"])
+        
+        return client_token, access_token
 
     async def post(self, endpoint: str, data: dict = None, property_name: str = None):
         if data is None:

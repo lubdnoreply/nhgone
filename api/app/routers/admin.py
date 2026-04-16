@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Body
 from pydantic import BaseModel
 from app.config import settings, get_supabase_client
+from app.services.encryption import encryption_service
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -14,6 +15,12 @@ class SyncScheduleUpdate(BaseModel):
     sync_hour: int
     sync_minute: int
     sync_enabled: bool
+
+class PropertyApiSettingsUpdate(BaseModel):
+    property_name: str
+    client_name: str
+    client_token: str
+    access_token: str
 
 @router.post("/users")
 async def create_user(request: UserCreateRequest):
@@ -51,23 +58,40 @@ async def get_sync_properties():
     try:
         admin_supabase = get_supabase_client()
         res = admin_supabase.table("property_api_settings").select("*").order("property_name").execute()
-        return {"status": "success", "data": res.data}
+        decrypted_data = [encryption_service.decrypt_data(row) for row in res.data]
+        return {"status": "success", "data": decrypted_data}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.patch("/sync/properties/{property_id}")
-async def update_sync_schedule(property_id: str, request: SyncScheduleUpdate):
-    """
-    Update the sync schedule for a specific property.
-    """
+@router.post("/sync/properties")
+async def create_property_settings(request: PropertyApiSettingsUpdate):
     try:
         admin_supabase = get_supabase_client()
-        admin_supabase.table("property_api_settings").update({
-            "sync_hour": request.sync_hour,
-            "sync_minute": request.sync_minute,
-            "sync_enabled": request.sync_enabled
-        }).eq("id", property_id).execute()
+        data = request.dict()
+        encrypted_data = encryption_service.encrypt_data(data)
         
-        return {"status": "success", "message": "Sync schedule updated"}
+        res = admin_supabase.table("property_api_settings").insert(encrypted_data).execute()
+        return {"status": "success", "data": res.data[0] if res.data else None}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.put("/sync/properties/{property_id}")
+async def update_property_settings(property_id: str, request: PropertyApiSettingsUpdate):
+    try:
+        admin_supabase = get_supabase_client()
+        data = request.dict()
+        encrypted_data = encryption_service.encrypt_data(data)
+        
+        admin_supabase.table("property_api_settings").update(encrypted_data).eq("id", property_id).execute()
+        return {"status": "success", "message": "Property settings updated"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.delete("/sync/properties/{property_id}")
+async def delete_property_settings(property_id: str):
+    try:
+        admin_supabase = get_supabase_client()
+        admin_supabase.table("property_api_settings").delete().eq("id", property_id).execute()
+        return {"status": "success", "message": "Property deleted"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

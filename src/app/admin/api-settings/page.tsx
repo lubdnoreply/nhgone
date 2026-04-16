@@ -28,12 +28,15 @@ export default function ApiSettingsPage() {
 
   const fetchSettings = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("property_api_settings")
-      .select("*")
-      .order("property_name");
-    
-    if (data) setSettings(data);
+    try {
+      const response = await fetch("/api/admin/sync/properties");
+      const res = await response.json();
+      if (res.status === "success") {
+        setSettings(res.data);
+      }
+    } catch (err) {
+      console.error("Fetch error:", err);
+    }
     setLoading(false);
   };
 
@@ -52,46 +55,65 @@ export default function ApiSettingsPage() {
       return;
     }
 
-    const { data, error } = await supabase
-      .from("property_api_settings")
-      .insert([newForm])
-      .select();
+    try {
+      const response = await fetch("/api/admin/sync/properties", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newForm)
+      });
+      const res = await response.json();
 
-    if (!error) {
-      setSettings([...settings, data[0]].sort((a, b) => a.property_name.localeCompare(b.property_name)));
-      setIsAdding(false);
-      setNewForm({ property_name: "", client_name: "XPossible Hotel Connec", client_token: "", access_token: "" });
-    } else {
-      alert("Error adding property: " + error.message);
+      if (res.status === "success") {
+        setSettings([...settings, res.data].sort((a, b) => a.property_name.localeCompare(b.property_name)));
+        setIsAdding(false);
+        setNewForm({ property_name: "", client_name: "XPossible Hotel Connec", client_token: "", access_token: "" });
+      } else {
+        alert("Error adding property: " + res.detail);
+      }
+    } catch (err) {
+      alert("Error adding property");
     }
   };
 
   const handleSave = async () => {
     if (!editForm) return;
 
-    const { error } = await supabase
-      .from("property_api_settings")
-      .update({
-        property_name: editForm.property_name,
-        client_name: editForm.client_name,
-        client_token: editForm.client_token,
-        access_token: editForm.access_token
-      })
-      .eq("id", editForm.id);
+    try {
+      const response = await fetch(`/api/admin/sync/properties/${editForm.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          property_name: editForm.property_name,
+          client_name: editForm.client_name,
+          client_token: editForm.client_token,
+          access_token: editForm.access_token
+        })
+      });
+      const res = await response.json();
 
-    if (!error) {
-      setSettings(settings.map(s => s.id === editForm.id ? editForm : s));
-      setEditingId(null);
-    } else {
-      alert("Error saving: " + error.message);
+      if (res.status === "success") {
+        setSettings(settings.map(s => s.id === editForm.id ? editForm : s));
+        setEditingId(null);
+      } else {
+        alert("Error saving: " + res.detail);
+      }
+    } catch (err) {
+      alert("Error saving");
     }
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this property?")) return;
-    const { error } = await supabase.from("property_api_settings").delete().eq("id", id);
-    if (!error) {
-      setSettings(settings.filter(s => s.id !== id));
+    try {
+      const response = await fetch(`/api/admin/sync/properties/${id}`, {
+        method: "DELETE"
+      });
+      const res = await response.json();
+      if (res.status === "success") {
+        setSettings(settings.filter(s => s.id !== id));
+      }
+    } catch (err) {
+      alert("Error deleting");
     }
   };
 
