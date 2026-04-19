@@ -29,7 +29,8 @@ export default function ApiSettingsPage() {
   const fetchSettings = async () => {
     setLoading(true);
     try {
-      const response = await fetch("/api/admin/sync/properties");
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const response = await fetch(`${apiUrl}/admin/sync/properties`);
       const res = await response.json();
       if (res.status === "success") {
         setSettings(res.data);
@@ -56,7 +57,8 @@ export default function ApiSettingsPage() {
     }
 
     try {
-      const response = await fetch("/api/admin/sync/properties", {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const response = await fetch(`${apiUrl}/admin/sync/properties`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newForm)
@@ -79,7 +81,8 @@ export default function ApiSettingsPage() {
     if (!editForm) return;
 
     try {
-      const response = await fetch(`/api/admin/sync/properties/${editForm.id}`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const response = await fetch(`${apiUrl}/admin/sync/properties/${editForm.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -105,7 +108,8 @@ export default function ApiSettingsPage() {
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this property?")) return;
     try {
-      const response = await fetch(`/api/admin/sync/properties/${id}`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const response = await fetch(`${apiUrl}/admin/sync/properties/${id}`, {
         method: "DELETE"
       });
       const res = await response.json();
