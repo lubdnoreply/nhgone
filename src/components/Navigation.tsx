@@ -27,24 +27,44 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
       }
 
       // If user is logged in, must have a profile
+      // We check by ID and fallback to Email to be absolute
       const { data: profile, error } = await supabase
         .from("profiles")
-        .select("id")
+        .select("id, email")
         .eq("id", user.id)
         .single();
 
-      if (error || !profile) {
+      let finalProfile = profile;
+      
+      // Secondary check by email if ID check didn't return data (just in case of sync issues)
+      if (!finalProfile && user.email) {
+        const { data: emailProfile } = await supabase
+          .from("profiles")
+          .select("id, email")
+          .eq("email", user.email)
+          .single();
+        finalProfile = emailProfile;
+      }
+
+      if (error && error.code !== 'PGRST116' && !finalProfile) {
+         console.error("Auth Guard Error:", error);
+      }
+
+      if (!finalProfile) {
         if (!isLoginPage) {
-          console.warn("Unauthorized access attempt by", user.email);
+          console.warn("Unauthorized access attempt. User email:", user.email, "User ID:", user.id);
           await supabase.auth.signOut();
+          // Force hard redirect to be absolutely sure the session is dead and error shows
           window.location.href = "/?error=unauthorized";
           setIsAuthorized(false);
         } else {
+          // If already on login page but somehow have a user without profile, sign out
+          await supabase.auth.signOut();
           setIsAuthorized(true);
         }
       } else {
         // Authorized!
-        if (isLoginPage) {
+        if (isLoginPage && pathname === "/") {
           router.push("/dashboard");
         }
         setIsAuthorized(true);
