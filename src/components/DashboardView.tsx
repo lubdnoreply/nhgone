@@ -1,4 +1,5 @@
 "use client";
+// Updated Member Columns Mapping - 22 Apr 2026
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
