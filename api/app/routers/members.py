@@ -16,86 +16,11 @@ async def get_live_members(
     Fetch live members (customers) from MEWS API.
     """
     try:
-        all_reservations = []
-        if start_date and end_date:
-            current_cursor = None
-            while True:
-                res_payload = {
-                    "States": ["Started", "Processed", "Confirmed", "Optional"],
-                    "Limitation": {"Count": 500},
-                    "StartUtc": {
-                        "StartUtc": start_date,
-                        "EndUtc": end_date
-                    }
-                }
-                if current_cursor:
-                    res_payload["Limitation"]["Cursor"] = current_cursor
-
-                res = await mews_client.post("/api/connector/v1/reservations/getAll/2023-06-06", res_payload, property_name=property_name)
-                chunk = res.get("Reservations", [])
-                current_cursor = res.get("Cursor")
-                all_reservations.extend(chunk)
-                
-                if not current_cursor or not chunk:
-                    break
-
-        # 2. Extract unique Customer IDs
-        customer_ids = set()
-        for r in all_reservations:
-            if r.get("AccountId"):
-                customer_ids.add(r["AccountId"])
-            if r.get("BookerId"):
-                customer_ids.add(r["BookerId"])
-        
-        customer_ids = list(customer_ids)
-        transformed = []
-
-        # 3. Fetch Customer Details in batches
-        if customer_ids:
-            chunk_size = 500
-            for i in range(0, len(customer_ids), chunk_size):
-                batch_ids = customer_ids[i:i+chunk_size]
-                
-                cust_payload = {
-                    "Limitation": {"Count": len(batch_ids)},
-                    "CustomerIds": batch_ids
-                }
-                cust_res = await mews_client.post("/api/connector/v1/customers/getAll", cust_payload, property_name=property_name)
-                
-                for cust in cust_res.get("Customers", []):
-                    classifications = cust.get("Classifications", [])
-                    loyalty = classifications[0] if classifications else "Standard"
-                    
-                    transformed.append({
-                        "Number": cust.get("Number", ""),
-                        "Title": cust.get("Title", ""),
-                        "Last Name": cust.get("LastName", ""),
-                        "First Name": cust.get("FirstName", ""),
-                        "Second Last Name": cust.get("SecondLastName", ""),
-                        "Nationality": cust.get("NationalityCode", ""),
-                        "Preferred Language": cust.get("PreferredLanguageCode", ""),
-                        "Language": cust.get("LanguageCode", ""),
-                        "Birth Date": cust.get("BirthDate", ""),
-                        "Birth Place": cust.get("BirthPlace", ""),
-                        "Occupation": cust.get("Occupation", ""),
-                        "Email": cust.get("Email", ""),
-                        "Phone": cust.get("Phone", ""),
-                        "Tax ID": cust.get("TaxIdentificationNumber", ""),
-                        "Loyalty Code": cust.get("LoyaltyCode", ""),
-                        "Accounting Code": cust.get("AccountingCode", ""),
-                        "Billing Code": cust.get("BillingCode", ""),
-                        "Car Registration": cust.get("CarRegistrationNumber", ""),
-                        "Dietary": cust.get("DietaryRequirements", ""),
-                        "Notes": cust.get("Notes", ""),
-                        "Created": cust.get("CreatedUtc", ""),
-                        "Updated": cust.get("UpdatedUtc", ""),
-                        "Active": cust.get("IsActive", True),
-                        "Classifications": ", ".join(cust.get("Classifications", [])) if cust.get("Classifications") else "",
-                        "Options": ", ".join(cust.get("Options", [])) if cust.get("Options") else "",
-                        "Identifier": cust.get("Id", ""),
-                        "mews_id": cust.get("Id", "")
-                    })
-                    
+        transformed = await sync_service.get_mapped_members(
+            property_name=property_name,
+            start_date=start_date,
+            end_date=end_date
+        )
         return {"status": "success", "data": transformed}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

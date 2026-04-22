@@ -63,38 +63,48 @@ async def daily_auto_sync():
         for prop in properties:
             try:
                 print(f"Starting scheduled sync for property: {prop}")
-                # We use yesterday as default range for auto-sync
-                result = await sync_service.get_mapped_reservations(property_name=prop)
                 
-                batch = []
-                for r in result.get("data", []):
-                    mews_id = r.get("Identifier")
-                    if mews_id:
-                        batch.append({
-                            "mews_id": mews_id,
+                # --- A. Sync Reservations ---
+                # We use yesterday as default range for auto-sync in get_mapped_reservations
+                res_result = await sync_service.get_mapped_reservations(property_name=prop)
+                res_batch = []
+                for r in res_result.get("data", []):
+                    m_id = r.get("Identifier")
+                    if m_id:
+                        res_batch.append({
+                            "mews_id": m_id,
                             "property": prop,
                             "data": encryption_service.encrypt_data(r)
                         })
                 
-                if batch:
-                    # Upsert with service role to bypass RLS
-                    sync_service.supabase.table("reservations_sync").upsert(batch).execute()
-                    
-                    sync_service.supabase.table("sync_logs").insert({
-                        "property": prop,
-                        "status": "success",
-                        "records_synced": len(batch),
-                        "message": "Successfully synced reservations"
-                    }).execute()
-                    print(f"Successfully synced {len(batch)} reservations for {prop}")
-                else:
-                    sync_service.supabase.table("sync_logs").insert({
-                        "property": prop,
-                        "status": "success",
-                        "records_synced": 0,
-                        "message": "No reservations found to sync"
-                    }).execute()
-                    print(f"No reservations found to sync for {prop}")
+                if res_batch:
+                    sync_service.supabase.table("reservations_sync").upsert(res_batch).execute()
+                    print(f"Successfully synced {len(res_batch)} reservations for {prop}")
+                
+                # --- B. Sync Members (Arrival Based) ---
+                mem_result = await sync_service.get_mapped_members(property_name=prop)
+                mem_batch = []
+                for m in mem_result:
+                    m_id = m.get("Identifier")
+                    if m_id:
+                        mem_batch.append({
+                            "mews_id": m_id,
+                            "property": prop,
+                            "data": encryption_service.encrypt_data(m)
+                        })
+                
+                if mem_batch:
+                    sync_service.supabase.table("members_sync").upsert(mem_batch).execute()
+                    print(f"Successfully synced {len(mem_batch)} members for {prop}")
+
+                # Log overall success
+                total_synced = len(res_batch) + len(mem_batch)
+                sync_service.supabase.table("sync_logs").insert({
+                    "property": prop,
+                    "status": "success",
+                    "records_synced": total_synced,
+                    "message": f"Successfully synced {len(res_batch)} reservations and {len(mem_batch)} members"
+                }).execute()
                     
             except Exception as prop_err:
                 sync_service.supabase.table("sync_logs").insert({

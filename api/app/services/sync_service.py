@@ -218,4 +218,103 @@ class SyncService:
             logger.error(f"Error mapping reservations for {property_name}: {str(e)}")
             raise e
 
+    async def get_mapped_members(self, property_name: str, start_date: str = None, end_date: str = None):
+        """
+        Fetch members (arrival based) and map all columns.
+        """
+        try:
+            if not start_date or not end_date:
+                # Default to Yesterday 00:01:00 to 23:59:59 (Asia/Bangkok time), exported as UTC for Mews API
+                bkk_tz = ZoneInfo("Asia/Bangkok")
+                now_bkk = datetime.now(bkk_tz)
+                yesterday_bkk = now_bkk - timedelta(days=1)
+                
+                if not start_date:
+                    start_dt = yesterday_bkk.replace(hour=0, minute=1, second=0, microsecond=0)
+                    start_date = start_dt.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+                if not end_date:
+                    end_dt = yesterday_bkk.replace(hour=23, minute=59, second=59, microsecond=999999)
+                    end_date = end_dt.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+            # 1. Fetch Reservations to get participants/bookers
+            all_reservations = []
+            current_cursor = None
+            while True:
+                res_payload = {
+                    "States": ["Started", "Processed", "Confirmed", "Optional"],
+                    "Limitation": {"Count": 500},
+                    "StartUtc": {
+                        "StartUtc": start_date,
+                        "EndUtc": end_date
+                    }
+                }
+                if current_cursor:
+                    res_payload["Limitation"]["Cursor"] = current_cursor
+
+                res = await mews_client.post("/api/connector/v1/reservations/getAll/2023-06-06", res_payload, property_name=property_name)
+                chunk = res.get("Reservations", [])
+                current_cursor = res.get("Cursor")
+                all_reservations.extend(chunk)
+                
+                if not current_cursor or not chunk:
+                    break
+
+            # 2. Extract unique Customer IDs
+            customer_ids = set()
+            for r in all_reservations:
+                if r.get("AccountId"):
+                    customer_ids.add(r["AccountId"])
+                if r.get("BookerId"):
+                    customer_ids.add(r["BookerId"])
+            
+            customer_ids = list(customer_ids)
+            mapped_members = []
+
+            # 3. Fetch Customer Details in batches
+            if customer_ids:
+                chunk_size = 500
+                for i in range(0, len(customer_ids), chunk_size):
+                    batch_ids = customer_ids[i:i+chunk_size]
+                    
+                    cust_payload = {
+                        "Limitation": {"Count": len(batch_ids)},
+                        "CustomerIds": batch_ids
+                    }
+                    cust_res = await mews_client.post("/api/connector/v1/customers/getAll", cust_payload, property_name=property_name)
+                    
+                    for cust in cust_res.get("Customers", []):
+                        mapped_members.append({
+                            "Number": cust.get("Number", ""),
+                            "Title": cust.get("Title", ""),
+                            "Last Name": cust.get("LastName", ""),
+                            "First Name": cust.get("FirstName", ""),
+                            "Second Last Name": cust.get("SecondLastName", ""),
+                            "Nationality": cust.get("NationalityCode", ""),
+                            "Preferred Language": cust.get("PreferredLanguageCode", ""),
+                            "Language": cust.get("LanguageCode", ""),
+                            "Birth Date": cust.get("BirthDate", ""),
+                            "Birth Place": cust.get("BirthPlace", ""),
+                            "Occupation": cust.get("Occupation", ""),
+                            "Email": cust.get("Email", ""),
+                            "Phone": cust.get("Phone", ""),
+                            "Tax ID": cust.get("TaxIdentificationNumber", ""),
+                            "Loyalty Code": cust.get("LoyaltyCode", ""),
+                            "Accounting Code": cust.get("AccountingCode", ""),
+                            "Billing Code": cust.get("BillingCode", ""),
+                            "Car Registration": cust.get("CarRegistrationNumber", ""),
+                            "Dietary": cust.get("DietaryRequirements", ""),
+                            "Notes": cust.get("Notes", ""),
+                            "Created": cust.get("CreatedUtc", ""),
+                            "Updated": cust.get("UpdatedUtc", ""),
+                            "Active": cust.get("IsActive", True),
+                            "Classifications": ", ".join(cust.get("Classifications", [])) if cust.get("Classifications") else "",
+                            "Options": ", ".join(cust.get("Options", [])) if cust.get("Options") else "",
+                            "Identifier": cust.get("Id", ""),
+                            "mews_id": cust.get("Id", "") # Keep for compatibility
+                        })
+            return mapped_members
+        except Exception as e:
+            logger.error(f"Error mapping members for {property_name}: {str(e)}")
+            raise e
+
 sync_service = SyncService()
