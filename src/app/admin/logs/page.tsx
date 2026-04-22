@@ -79,7 +79,7 @@ export default function ActivityLogPage() {
                   <th className="px-6 py-4">Timestamp</th>
                   <th className="px-6 py-4">Property</th>
                   <th className="px-6 py-4">Status</th>
-                  <th className="px-6 py-4 text-right">Records Synced</th>
+                  <th className="px-6 py-4 text-right">Records Imported</th>
                   <th className="px-6 py-4">Message</th>
                 </tr>
               </thead>
@@ -131,7 +131,7 @@ export default function ActivityLogPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right font-medium">
                         {log.records_synced > 0 ? (
-                          <span className="text-slate-900">+{log.records_synced.toLocaleString()}</span>
+                          <span className="text-slate-900">{log.records_synced.toLocaleString()}</span>
                         ) : (
                           <span className="text-slate-400">-</span>
                         )}

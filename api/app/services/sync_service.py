@@ -55,21 +55,35 @@ class SyncService:
                     end_dt = yesterday_bkk.replace(hour=23, minute=59, second=59, microsecond=999999)
                     end_date = end_dt.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
-            payload = {
-                "CollidingUtc": {"StartUtc": start_date, "EndUtc": end_date},
-                "States": ["Canceled", "Started", "Processed", "Confirmed", "Inquired", "Optional"],
-                "Limitation": {"Count": 100}
-            }
-            if cursor:
-                payload["Limitation"]["Cursor"] = cursor
+            chunk_size = 500
+            
+            all_reservations = []
+            current_cursor = cursor
 
-            # 1. Fetch Reservations
-            response_data = await mews_client.post("/api/connector/v1/reservations/getAll/2023-06-06", payload, property_name=property_name)
-            reservations = response_data.get("Reservations", [])
-            return_cursor = response_data.get("Cursor")
+            while True:
+                payload = {
+                    "CollidingUtc": {"StartUtc": start_date, "EndUtc": end_date},
+                    "States": ["Canceled", "Started", "Processed", "Confirmed", "Inquired", "Optional"],
+                    "Limitation": {"Count": chunk_size}
+                }
+                if current_cursor:
+                    payload["Limitation"]["Cursor"] = current_cursor
+
+                # 1. Fetch Reservations
+                response_data = await mews_client.post("/api/connector/v1/reservations/getAll/2023-06-06", payload, property_name=property_name)
+                reservations_chunk = response_data.get("Reservations", [])
+                current_cursor = response_data.get("Cursor")
+                
+                all_reservations.extend(reservations_chunk)
+                
+                if not current_cursor or not reservations_chunk:
+                    break
+
+            reservations = all_reservations
+            return_cursor = current_cursor
 
             if not reservations:
-                return {"data": [], "cursor": return_cursor}
+                return {"data": [], "cursor": None}
 
             # 2. Collect unique IDs for relations
             account_ids = {r.get("AccountId") for r in reservations if r.get("AccountId")}

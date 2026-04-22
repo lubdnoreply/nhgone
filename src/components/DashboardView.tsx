@@ -111,7 +111,8 @@ export default function DashboardView({
         queryParams.append("property", selectedProperty);
         
         // Add date filters for saved reservations as requested
-        if (activeSection === "reservations") {
+        // Add date filters for saved data
+        if (activeSection === "reservations" || activeSection === "members") {
             if (startDate) queryParams.append("start_date", startDate);
             if (endDate) queryParams.append("end_date", endDate);
         }
@@ -134,11 +135,12 @@ export default function DashboardView({
   };
 
   const handleManualSync = async () => {
-    if (data.length === 0 || activeSection !== "reservations") return;
+    if (data.length === 0 || (activeSection !== "reservations" && activeSection !== "members")) return;
     setSyncing(true);
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-      const response = await fetch(`${apiUrl}/reservations/sync-manual`, {
+      const endpoint = activeSection === "reservations" ? "/reservations/sync-manual" : "/members/sync-manual";
+      const response = await fetch(`${apiUrl}${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -148,7 +150,7 @@ export default function DashboardView({
       });
       const result = await response.json();
       if (result.status === "success") {
-        setSyncStatus({ inserted: result.inserted, skipped: result.skipped });
+        setSyncStatus({ inserted: result.inserted, skipped: result.skipped || 0 });
         setShowSyncModal(true);
       } else {
         setError("Failed to sync: " + result.message);
@@ -164,10 +166,11 @@ export default function DashboardView({
     if (selectedIds.length === 0) return;
     if (!confirm(`Are you sure you want to delete ${selectedIds.length} records?`)) return;
     
+    const endpoint = activeSection === "reservations" ? "/reservations/saved" : "/members/managed";
     setLoading(true);
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-      const response = await fetch(`${apiUrl}/reservations/saved`, {
+      const response = await fetch(`${apiUrl}${endpoint}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mews_ids: selectedIds })
@@ -202,13 +205,19 @@ export default function DashboardView({
       "Company Identifier", "Travel agency Identifier", "Reservation origin details", 
       "Restoration reason"
     ],
-    members: ["mews_id", "full_name", "email", "phone", "loyalty"],
+    members: [
+      "Number", "Title", "Last Name", "First Name", "Second Last Name", "Nationality", 
+      "Preferred Language", "Language", "Birth Date", "Birth Place", "Occupation", 
+      "Email", "Phone", "Tax ID", "Loyalty Code", "Accounting Code", "Billing Code", 
+      "Car Registration", "Dietary", "Notes", "Created", "Updated", "Active", 
+      "Classifications", "Options", "Identifier"
+    ],
     payments: ["mews_id", "amount", "currency", "status", "processed_at"]
   };
 
   // Prepend Import Date for saved reservations
   let allKeys = sectionKeys[activeSection];
-  if (dataSource === "saved" && activeSection === "reservations") {
+  if (dataSource === "saved" && (activeSection === "reservations" || activeSection === "members")) {
     allKeys = ["Import Date", ...allKeys];
   }
 
@@ -464,7 +473,7 @@ export default function DashboardView({
                    Delete ({selectedIds.length})
                 </button>
               )}
-              {isSuperAdmin && activeSection === "reservations" && dataSource === "live" && (
+              {isSuperAdmin && (activeSection === "reservations" || activeSection === "members") && dataSource === "live" && (
                 <button onClick={handleManualSync} disabled={data.length === 0 || syncing} className="flex items-center gap-2 px-5 py-2.5 bg-blue-500/10 border border-blue-500/20 text-blue-500 rounded-2xl text-xs font-bold hover:bg-blue-500/20 transition-all disabled:opacity-30">
                   {syncing ? <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-500/20 border-t-blue-500"></div> : <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>}
                   Import
@@ -626,8 +635,20 @@ export default function DashboardView({
       }
     }
 
-    if (key.toLowerCase().includes('utc') && typeof value === 'string' && value.includes('T')) return <span className="text-slate-300 font-mono text-xs">{new Date(value).toLocaleString()}</span>;
-    if (key === 'State' || key === 'status') return <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${value === 'Confirmed' ? 'bg-emerald-500/10 text-emerald-400' : value === 'Started' ? 'bg-blue-500/10 text-blue-400' : 'bg-white/5 text-slate-400'}`}>{value}</span>;
+    // Format dates
+    const dateKeys = ["Created", "Updated", "Birth Date", "Arrival", "Departure", "Released", "Cancelled", "Confirmed", "synced_at", "processed_at"];
+    const isDateKey = key.toLowerCase().includes('utc') || dateKeys.some(k => key.includes(k));
+    
+    if (isDateKey && typeof value === 'string' && (value.includes('T') || (value.includes('-') && value.length >= 10))) {
+      try {
+        const d = new Date(value);
+        if (!isNaN(d.getTime())) {
+          return <span className="text-slate-300 font-mono text-xs">{d.toLocaleString()}</span>;
+        }
+      } catch (e) {}
+    }
+
+    if (key === 'State' || key === 'status' || key === 'Status') return <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${value === 'Confirmed' || value === 'Checked in' || value === 'Checked out' ? 'bg-emerald-500/10 text-emerald-400' : value === 'Started' ? 'bg-blue-500/10 text-blue-400' : 'bg-white/5 text-slate-400'}`}>{value}</span>;
     if (typeof value === 'object') return <span className="text-[10px] text-slate-500 truncate block">{JSON.stringify(value).substring(0, 50)}...</span>;
     return <span className={typeof value === 'number' ? 'text-[#AAA024] font-bold' : 'text-slate-300'}>{String(value)}</span>;
   }
