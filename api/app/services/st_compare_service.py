@@ -23,6 +23,7 @@ Two things about the source sheets drive the whole design:
 """
 import asyncio
 import io
+import json
 import logging
 import re
 from collections import OrderedDict
@@ -90,10 +91,35 @@ def _parse_master(content: bytes) -> dict:
             if str(params.cell(row, 1).value or "").strip() == "Created":
                 created = params.cell(row, 2).value
 
+    # The Arrivals/Departures tabs hold the SAME export broken down per space
+    # category - the detail the Master tab's single total hides. Reading them
+    # is what turns a morning's "Chinatown -2" into "CTS -1, TNK -1", which is
+    # the difference between a number to investigate from scratch and a
+    # difference somebody can act on. Layout is Service | Space category |
+    # <date> | Total, with a trailing "Total" row that is skipped.
+    per_category = {}
+    for tab in ("Arrivals", "Departures"):
+        if tab not in wb.sheetnames:
+            continue
+        ws = wb[tab]
+        counts = {}
+        for row in range(2, ws.max_row + 1):
+            service = ws.cell(row, 1).value
+            category = ws.cell(row, 2).value
+            value = ws.cell(row, 3).value
+            if not category or str(service).strip().lower() == "total":
+                continue
+            try:
+                counts[str(category).strip()] = int(value or 0)
+            except (TypeError, ValueError):
+                continue
+        per_category[tab.lower()] = counts
+
     report_date = master.get("Date")
     if isinstance(report_date, datetime):
         report_date = report_date.strftime("%Y-%m-%d")
-    return {"master": master, "date": report_date, "created": created}
+    return {"master": master, "date": report_date, "created": created,
+            "per_category": per_category}
 
 
 async def _fetch_sheets() -> dict:
@@ -130,6 +156,49 @@ def _local(ts: str, prop: str) -> str:
     return datetime.fromisoformat(ts).astimezone(timezone(timedelta(hours=off))).strftime("%d %b %H:%M")
 
 
+def _our_categories(property_name: str, date: str) -> dict:
+    """Our stored Arrivals/Departures for one day, per space category, as
+    {"arrivals": {cat: units}, "departures": {...}}.
+
+    Reads the stored report blob directly: get_st_files_list returns the ten
+    totals and nothing underneath them, and it is the breakdown underneath
+    that says WHICH category a total is short on. Counts `spaces`, not rows,
+    for the same reason the report's own arrivals_count does - one dorm
+    reservation is several beds.
+    """
+    from app.services.encryption import encryption_service
+    from app.services.sync_service import sync_service
+
+    out = {"arrivals": {}, "departures": {}}
+    try:
+        res = sync_service.supabase.table("st_files_sync").select("data").eq(
+            "property", property_name).eq("report_date", date).limit(1).execute()
+        if not res.data:
+            return out
+        report = json.loads(encryption_service.decrypt(res.data[0]["data"]["blob"]))
+    except Exception as e:
+        logger.warning(f"ST compare: could not read {property_name}'s stored report: {e}")
+        return out
+
+    for key in ("arrivals", "departures"):
+        counts = {}
+        for row in report.get(key) or []:
+            cat = (row.get("category") or "?").strip()
+            counts[cat] = counts.get(cat, 0) + (row.get("spaces") or 0)
+        out[key] = counts
+    return out
+
+
+def _category_note(ours: dict, sheet: dict) -> str:
+    """"CTS -1, TNK -1" - the categories a total differs on, ours vs sheet."""
+    bits = []
+    for cat in sorted(set(ours) | set(sheet)):
+        o, s = ours.get(cat, 0), sheet.get(cat, 0)
+        if o != s:
+            bits.append(f"{cat} {o - s:+d}")
+    return ", ".join(bits)
+
+
 async def build_comparison(want_date: str = None) -> dict:
     """The whole check, as data. `status` is one of:
       ok             - comparable, see columns/grid
@@ -154,6 +223,7 @@ async def build_comparison(want_date: str = None) -> dict:
     date = want_date or distinct[0]
 
     ours = {}
+    ours_by_category = {}
     for prop in SHEETS:
         try:
             rows = await sync_service.get_st_files_list(prop)
@@ -161,6 +231,11 @@ async def build_comparison(want_date: str = None) -> dict:
         except Exception as e:
             logger.warning(f"ST compare: could not read st_files_sync for {prop}: {e}")
             ours[prop] = None
+        # Our own Arrivals/Departures per space category, off the same stored
+        # blob, so a total that disagrees can name the categories responsible.
+        # Read separately from get_st_files_list because that one returns the
+        # ten totals only.
+        ours_by_category[prop] = _our_categories(prop, date)
 
     columns, grid, detail = [], {}, {}
     for label, key in METRICS:
@@ -192,6 +267,16 @@ async def build_comparison(want_date: str = None) -> dict:
                     excluded = ou.get("day_use_arrivals_excluded", 0)
                     if excluded:
                         note += f" ({excluded} day-use excluded as night-tail)"
+                # Which space categories the total is short (or long) on. The
+                # sheet publishes Arrivals and Departures per category on their
+                # own tabs; every other metric has only the one total, so this
+                # can only be said for those two.
+                if key in ("arrivals", "departures"):
+                    cat_note = _category_note(
+                        (ours_by_category.get(prop) or {}).get(key, {}),
+                        (sh.get("per_category") or {}).get(key, {}))
+                    if cat_note:
+                        note += f" [{cat_note}]"
                 notes.append(note)
                 detail.setdefault(prop, []).append((label, ov, sv))
         columns.append({"label": label, "matched": ok, "total": len(SHEETS), "notes": notes})
