@@ -2969,6 +2969,42 @@ class SyncService:
         customers_map = {c["Id"]: c for c in resv_res.get("Customers", []) if c.get("Id")}
         resources_map = {r["Id"]: r for r in resv_res.get("Resources", []) if r.get("Id")}
 
+        # Real check-in times, used ONLY to ADD an arrival the scheduled time
+        # would file on the wrong day - never to remove one. StartUtc here is
+        # the legacy endpoint's DEPRECATED *scheduled* arrival and never moves
+        # once the guest turns up, the same trap CLAUDE.md records as a real
+        # bug in RR3 and RR4. Chinatown #97197 on 06-Sep-2026 is the case:
+        # scheduled 05-Sep 23:45, actually checked in 06-Sep 00:01, checked
+        # out 06-Sep 11:31 - an ordinary one-night stay that crossed midnight
+        # on the way in, which we filed on the 5th and MEWS's own export
+        # counted on the 6th.
+        #
+        # Deliberately a UNION rather than a replacement. Replacing StartUtc
+        # with ActualStartUtc outright was tried and measured against all
+        # eight sheets for 06-Sep: it fixed nothing and cost Makati two
+        # arrivals, because it also moves OUT every reservation whose real
+        # check-in landed outside the day. Adding-only cannot lose a row.
+        # ActualStartUtc lives only on the 2023-06-06 endpoint, which cannot
+        # embed Customers/Resources - hence the second narrow call by
+        # ReservationIds, the same one get_rr3_cards makes.
+        actual_start = {}
+        _ids = [r["Id"] for r in reservations if r.get("Id")]
+        for _i in range(0, len(_ids), 1000):
+            _batch = _ids[_i:_i + 1000]
+            try:
+                _ar = await mews_client.post(
+                    "/api/connector/v1/reservations/getAll/2023-06-06",
+                    {"ReservationIds": _batch, "Limitation": {"Count": len(_batch)}},
+                    property_name=property_name,
+                )
+                for _r in _ar.get("Reservations", []):
+                    if _r.get("Id") and _r.get("ActualStartUtc"):
+                        actual_start[_r["Id"]] = _r["ActualStartUtc"]
+            except Exception as e:
+                # Degrades to scheduled-only, i.e. exactly the old behaviour.
+                logger.warning(
+                    f"ST Files: could not read ActualStartUtc for {property_name}: {e}")
+
         # 6b. Complimentary count - Rate AND Segment, see _is_complimentary
         # above for the sheet formula both of them come from.
         rate_ids = list({r.get("RateId") for r in reservations if r.get("RateId")})
@@ -3176,9 +3212,18 @@ class SyncService:
             # matching MEWS's own Availability/ST export (e.g. Lub d Siem Reap:
             # 10-bed dorm bookings count as 10 bed arrivals/departures).
             units = len(space_categories(res))
-            arrives = in_window(res.get("StartUtc"))
+            # Union, not replacement - see actual_start above.
+            sched_arrives = in_window(res.get("StartUtc"))
+            arrives = sched_arrives or in_window(actual_start.get(res.get("Id")))
             departs = in_window(res.get("EndUtc"))
             day_use = arrives and departs
+            # The Customers tab keeps the SCHEDULED-only reading. Letting the
+            # union reach it counted Chinatown 194 against the sheet's 192 on
+            # 06-Sep-2026: a guest who checks in at 00:01 and out at 11:31 is
+            # an arrival that day (MEWS counts them) but never slept there, and
+            # MEWS's Customers figure leaves them out. Arrivals and Customers
+            # genuinely answer different questions here.
+            sched_day_use = sched_arrives and departs
             # A zero-night ("day use") stay ALWAYS counts as a departure; what
             # varies is whether it also counts as an arrival, and that turns on
             # the hour it started. Measured across three days:
@@ -3250,7 +3295,7 @@ class SyncService:
             # during the day - they belong to the previous day's file.
             end_utc = parse_utc(res.get("EndUtc"))
             stays_the_night = end_utc is not None and end_utc > day_end_utc
-            if (stays_the_night or day_use) and units and requested_is_space_type(res):
+            if (stays_the_night or sched_day_use) and units and requested_is_space_type(res):
                 customers_count += headcount(res)
                 for cid in ([res.get("CustomerId")] + (res.get("CompanionIds") or [])):
                     if cid:
