@@ -517,12 +517,14 @@ def render_text(result: dict) -> str:
         r, t = p["rr4"], p["tm30"]
         r_count = "{}/{}".format(r["sheet"], r["ours"])
         t_count = "{}/{}".format(t["sheet"], t["ours"])
-        r_bad = r["diff_rows"] + r["only_ours"] + r["only_sheet"]
-        t_bad = t["diff_rows"] + t["only_ours"] + t["only_sheet"]
+        # Same rule as the HTML cell: the guest COUNT decides the mark, and
+        # what still differs inside matching-sized registers is section 2's.
+        r_gap = r["sheet"] - r["ours"]
+        t_gap = t["sheet"] - t["ours"]
         out.append(
             f"{p['short']:<12}{p['date']:<12}"
-            f"{r_count:<17}{('✓' if r_bad == 0 else '✗ ' + str(r_bad)):<7}"
-            f"{t_count:<17}{'✓' if t_bad == 0 else '✗ ' + str(t_bad)}")
+            f"{r_count:<17}{('✓' if r_gap == 0 else f'✗ {r_gap:+d}'):<7}"
+            f"{t_count:<17}{'✓' if t_gap == 0 else f'✗ {t_gap:+d}'}")
     out.append("-" * 88)
 
     tr, tt = result["totals"]["rr4"], result["totals"]["tm30"]
@@ -631,28 +633,29 @@ def _dmy_display(iso: str) -> str:
 
 
 def _summary_cell(block: dict, window: str = "") -> str:
-    """One register's cell in table 1: a green "✓ N" when the sheet and
-    NHGOne hold the same guests with the same details, a red "✗ sheet / ours"
-    naming what differs when they don't.
+    """One register's cell in table 1: a green "✓ N" when the sheet and NHGOne
+    hold the SAME NUMBER OF GUESTS, a red "✗ sheet / ours" when they don't.
+
+    The count is the whole test for the colour, by request. Anything else that
+    differs - a column whose value disagrees, a guest one side holds and the
+    other doesn't, known drift - is reported in grey inside the green cell and
+    listed row by row in table 2, but does not turn it red. Two registers of
+    the same size are the thing the filing is judged on; which of their rows
+    still need a look is the next table's job.
 
     Sheet first, then ours, in that order everywhere in this mail - it is the
     sheet that is the ground truth being checked against, so it reads as
     "what should be there / what we produced".
 
-    Known drift does NOT make a cell red: it has each been chased down and
-    explained (see _KNOWN_DRIFT), so a day carrying only drift still reads as
-    clean at a glance and the amber row in table 2 carries the detail.
-
-    `window` is the property's configured TM30 start. A non-midnight one
-    files a shorter day than the sheet holds ON PURPOSE (Chinatown's 12:15
-    drops every guest arriving before noon - 2 to 20 of them on each of the
-    seven days measured to 29-Aug-2026), so its shortfall is annotated as the
-    configured consequence it is. Deliberately still red rather than hidden or
-    amber: unlike _KNOWN_DRIFT this cannot be verified row by row - TM30
-    carries no check-in column to test each missing guest against - so a
-    genuine new miss would look identical, and the number stays in view.
+    `window` is the property's configured TM30 start. A non-midnight one files
+    a shorter day than the sheet holds ON PURPOSE (Chinatown's 12:15 drops
+    every guest arriving before noon - 2 to 20 of them on each of the seven
+    days measured to 29-Aug-2026), so that shortfall is annotated as the
+    configured consequence it is. It still shows red, because it is a real
+    difference in the number of guests filed and, unlike _KNOWN_DRIFT, cannot
+    be verified row by row - TM30 carries no check-in column to test each
+    missing guest against, so a genuine new miss would look identical.
     """
-    real = block["diff_rows"] + block["only_ours"] + block["only_sheet"]
     # Deliberately "is our window non-midnight", NOT "does our window differ
     # from the sheet's". The sheets DECLARE a TM30 window in Master!B2 that
     # they do not actually filter by: on 02-Sep-2026 Chinatown's sheet said
@@ -663,12 +666,7 @@ def _summary_cell(block: dict, window: str = "") -> str:
     # cause (an earlier check found midnight reproduces Chinatown's sheet
     # exactly, 67 for 67, where 12:15 gives 56), so that is what is tested.
     shifted = bool(window) and window != "00:00"
-    if real == 0:
-        note = ""
-        if block["drift_rows"]:
-            note = (f'<span style="{_MUTED}font-weight:400"> '
-                    f'({block["drift_rows"]} known drift)</span>')
-        return f'<td style="{_TD}{_OK}">{_TICK} {block["sheet"]}{note}</td>'
+
     bits = []
     if block["diff_rows"]:
         bits.append(f"{block['diff_rows']} differ")
@@ -677,6 +675,26 @@ def _summary_cell(block: dict, window: str = "") -> str:
     if block["only_sheet"]:
         bits.append(f"{block['only_sheet']} only in the sheet"
                     + (f", as our {window} window intends" if shifted else ""))
+    if block["drift_rows"]:
+        bits.append(f"{block['drift_rows']} known drift")
+
+    # THE HEADLINE IS THE GUEST COUNT, and only the guest count. A register
+    # holding the same number of guests as the sheet reads green even when
+    # some of those rows still disagree on a column - by request, and because
+    # a count that matches is the thing the filing is judged on. Whatever
+    # still differs is not hidden: it is spelled out in grey right here and
+    # listed row by row in the next table.
+    #
+    # The two are genuinely independent. Patong on 06-Sep-2026 held exactly
+    # 233 RR4 rows against the sheet's 233 while three of them differed on a
+    # column and one guest existed on each side that the other did not - the
+    # unpaired pair cancels in the total.
+    if block["sheet"] == block["ours"]:
+        note = ""
+        if bits:
+            note = (f'<span style="{_MUTED}font-weight:400"> '
+                    f'({", ".join(bits)})</span>')
+        return f'<td style="{_TD}{_OK}">{_TICK} {block["sheet"]}{note}</td>'
     # The counts stay on one line; the note after them is allowed to wrap, or
     # "6 only in the sheet, as our 12:15 window intends" pushes the table past
     # the card in every client that honours nowrap.
@@ -716,9 +734,10 @@ def render_summary_table(result: dict) -> str:
     h.append("</tr></table>")
     return _scroll(
         h,
-        f'{_TICK} the sheet and NHGOne hold the same guests with the same details &nbsp;·&nbsp; '
-        f'{_CROSS} shows <b>Google Sheet / NHGOne</b> row counts and what differs, '
-        f'listed in full in the next table. '
+        f'{_TICK} the sheet and NHGOne hold the <b>same number of guests</b> &nbsp;·&nbsp; '
+        f'{_CROSS} that number differs, shown as <b>Google Sheet / NHGOne</b>. '
+        f'Anything still differing inside rows that DO line up is noted in grey '
+        f'and listed in full in the next table. '
         f'Rows are paired by passport/ID number, then every column of each paired row is compared '
         f'(except the row number, which both sides renumber on their own). '
         f'Rows with no name (a MEWS-booked slot not yet linked to a guest profile) are counted here '
