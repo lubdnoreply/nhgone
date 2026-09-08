@@ -926,6 +926,11 @@ async def _send_compare_now(kind: str):
     scheduled send. Each property is compared at whatever date its own sheet
     currently holds, which is the same thing the scheduled run does; there is
     no date to pass, because these workbooks only ever hold one pasted export.
+
+    Deliberately just "Sent to <recipients>" - no cells-matched/rows-differ
+    summary. That detail belongs in the mail itself (which the admin can just
+    go read) and in Admin > Sync's Activity Log, not in a popup whose only job
+    is confirming the send actually happened.
     """
     try:
         outcome = await compare_mail.send(kind, mark_sent=False, sync_type="manual")
@@ -933,7 +938,7 @@ async def _send_compare_now(kind: str):
             raise HTTPException(status_code=400, detail=f"Nothing sent - {outcome['reason']}")
         return {
             "status": "success",
-            "message": f"Sent to {', '.join(outcome['recipients'])} - {outcome['summary']}",
+            "message": f"Sent to {', '.join(outcome['recipients'])}",
         }
     except HTTPException:
         raise

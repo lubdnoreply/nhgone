@@ -769,6 +769,23 @@ export default function TemplatesPage() {
   const [sendingTest, setSendingTest] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
+  // Themed replacement for the browser's native confirm()/alert() on both
+  // "Send Test Now" buttons on this page - the compare/verification mails'
+  // (Test ST File, Test RR4/TM30 File) and the per-property digest's. One
+  // shared modal, driven by which action is pending: "confirm" is dismissible
+  // and asks first, "sending" is a blocking overlay with nothing to click
+  // (matches the request that it can't be closed mid-send), and "result"
+  // reports success/failure with an OK to dismiss. The compare mails' summary
+  // ("71/72 cells match") is deliberately left out of the result message -
+  // Admin > Sync's Activity Log already has that detail; this popup is only
+  // confirming the mail went out.
+  type SendNowAction = "compare" | "recipients";
+  type SendNowModalState =
+    | { kind: "confirm"; action: SendNowAction }
+    | { kind: "sending" }
+    | { kind: "result"; success: boolean; message: string };
+  const [sendNowModal, setSendNowModal] = useState<SendNowModalState | null>(null);
+
   // Shared by every hasPerPropertyRecipients tab (currently ST Files Email
   // and RR4/TM30 Files, both Per-Property) - reads/writes
   // property_api_settings directly under that tab's own config.
@@ -885,6 +902,7 @@ export default function TemplatesPage() {
   const handleSendTestNowRecipients = async () => {
     if (!recipProperty || !config.perPropertySendNowEndpoint) return;
     setRecipSendingTest(true);
+    setSendNowModal({ kind: "sending" });
     try {
       const res = await fetch(`${apiUrl}${config.perPropertySendNowEndpoint}`, {
         method: "POST",
@@ -893,12 +911,12 @@ export default function TemplatesPage() {
       });
       const result = await res.json();
       if (result.status === "success") {
-        alert(result.message);
+        setSendNowModal({ kind: "result", success: true, message: result.message });
       } else {
-        alert("Error sending: " + (result.detail || result.message));
+        setSendNowModal({ kind: "result", success: false, message: result.detail || result.message });
       }
     } catch (err: any) {
-      alert("Error sending: " + err.message);
+      setSendNowModal({ kind: "result", success: false, message: err.message });
     } finally {
       setRecipSendingTest(false);
     }
@@ -985,24 +1003,35 @@ export default function TemplatesPage() {
   const handleSendTestNow = async () => {
     if (!config.sendNowEndpoint) return;
     setSendingTest(true);
+    setSendNowModal({ kind: "sending" });
     try {
       const res = await fetch(`${apiUrl}${config.sendNowEndpoint}`, { method: "POST" });
       const result = await res.json();
       if (result.status === "success") {
         // included/skipped are the digest endpoints' shape; the verification
-        // mails compare every property in one pass and report in the message.
+        // mails' own message is deliberately just "Sent to <recipients>" -
+        // see _send_compare_now - so there is no cell-match count to strip.
         const includedNote = result.included ? `\nIncluded: ${result.included.join(", ") || "none"}` : "";
         const skippedNote = result.skipped?.length ? `\nSkipped: ${result.skipped.join("; ")}` : "";
-        alert(`${result.message}${includedNote}${skippedNote}`);
+        setSendNowModal({ kind: "result", success: true, message: `${result.message}${includedNote}${skippedNote}` });
       } else {
-        alert("Error sending: " + (result.detail || result.message));
+        setSendNowModal({ kind: "result", success: false, message: result.detail || result.message });
       }
     } catch (err: any) {
-      alert("Error sending: " + err.message);
+      setSendNowModal({ kind: "result", success: false, message: err.message });
     } finally {
       setSendingTest(false);
     }
   };
+
+  function confirmSendNowAction() {
+    if (!sendNowModal || sendNowModal.kind !== "confirm") return;
+    if (sendNowModal.action === "compare") {
+      handleSendTestNow();
+    } else {
+      handleSendTestNowRecipients();
+    }
+  }
 
   return (
     <div className="p-8 bg-white min-h-screen text-slate-900 font-sans">
@@ -1210,7 +1239,7 @@ export default function TemplatesPage() {
                     {recipSaving ? "Saving..." : "Save"}
                   </button>
                   <button
-                    onClick={handleSendTestNowRecipients}
+                    onClick={() => setSendNowModal({ kind: "confirm", action: "recipients" })}
                     disabled={recipSendingTest}
                     className="mt-3 w-full py-3.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-2xl font-bold transition-all active:scale-[0.98] disabled:opacity-50"
                   >
@@ -1351,7 +1380,7 @@ export default function TemplatesPage() {
               </button>
               {config.hasScheduleFields && (
                 <button
-                  onClick={handleSendTestNow}
+                  onClick={() => setSendNowModal({ kind: "confirm", action: "compare" })}
                   disabled={sendingTest}
                   className="mt-3 w-full py-3.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-2xl font-bold transition-all active:scale-[0.98] disabled:opacity-50"
                 >
@@ -1382,6 +1411,79 @@ export default function TemplatesPage() {
           </div>
         </div>
       </div>
+
+      {/* Send Test Now modal - one for both buttons on this page. "sending"
+          deliberately has no close (X), no Cancel, and its backdrop has no
+          onClick: nothing here can dismiss it before the request settles. */}
+      {sendNowModal && (
+        <div
+          className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={sendNowModal.kind === "confirm" ? () => setSendNowModal(null) : undefined}
+        >
+          <div
+            className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 border border-slate-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {sendNowModal.kind === "confirm" && (
+              <div className="p-6">
+                <div className="w-12 h-12 rounded-full bg-[#AAA024]/10 flex items-center justify-center mb-4">
+                  <svg className="w-6 h-6 text-[#AAA024]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-bold text-slate-800 mb-2">Send Test Now?</h2>
+                <p className="text-sm text-slate-500 mb-6">
+                  {sendNowModal.action === "compare"
+                    ? <>This sends the <span className="font-bold text-slate-700">{config.label}</span> email right now, using whatever is saved above. It doesn&apos;t affect today&apos;s regular scheduled send.</>
+                    : <>This sends the test email for <span className="font-bold text-slate-700">{recipProperty || "this property"}</span> right now.</>}
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={confirmSendNowAction}
+                    className="flex-1 bg-[#AAA024] text-white rounded-xl py-2.5 text-sm font-bold shadow-lg shadow-[#AAA024]/20 hover:bg-[#8f871e] transition-all"
+                  >
+                    Send Now
+                  </button>
+                  <button
+                    onClick={() => setSendNowModal(null)}
+                    className="flex-1 bg-slate-100 text-slate-600 rounded-xl py-2.5 text-sm font-bold hover:bg-slate-200 transition-all"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {sendNowModal.kind === "sending" && (
+              <div className="p-6 flex flex-col items-center text-center py-10">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#AAA024] mb-4"></div>
+                <h2 className="text-lg font-bold text-slate-800 mb-1">Sending…</h2>
+                <p className="text-sm text-slate-500">Please wait, this only takes a moment.</p>
+              </div>
+            )}
+
+            {sendNowModal.kind === "result" && (
+              <div className="p-6">
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 ${sendNowModal.success ? "bg-[#152A00]/10" : "bg-red-50"}`}>
+                  {sendNowModal.success ? (
+                    <svg className="w-6 h-6 text-[#152A00]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  ) : (
+                    <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4c-.77-1.33-2.69-1.33-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z" /></svg>
+                  )}
+                </div>
+                <h2 className="text-xl font-bold text-slate-800 mb-2">{sendNowModal.success ? "Sent" : "Couldn't Send"}</h2>
+                <p className="text-sm text-slate-500 mb-6 whitespace-pre-line">{sendNowModal.message}</p>
+                <button
+                  onClick={() => setSendNowModal(null)}
+                  className="w-full bg-[#AAA024] text-white rounded-xl py-2.5 text-sm font-bold shadow-lg shadow-[#AAA024]/20 hover:bg-[#8f871e] transition-all"
+                >
+                  OK
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
