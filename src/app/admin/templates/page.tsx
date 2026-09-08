@@ -1378,7 +1378,7 @@ export default function TemplatesPage() {
                 disabled={saving}
                 className="mt-6 w-full py-4 bg-[#AAA024] hover:bg-[#8f871e] text-white rounded-2xl font-bold shadow-xl shadow-[#AAA024]/20 transition-all active:scale-[0.98] disabled:opacity-50"
               >
-                {saving ? "Saving..." : `Save ${config.label} Template`}
+                {saving ? "Saving..." : "Save"}
               </button>
               {config.hasScheduleFields && (
                 <button
