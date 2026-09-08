@@ -263,6 +263,13 @@ _ST_DAY_USE_NIGHT_END_HOUR = 4
 # property's rate list today, but a rate name is free text somebody types.
 _ST_WALK_IN_RATE_RE = re.compile(r"\bwalk[\s-]*in\b", re.IGNORECASE)
 
+# Offline test seam for the ST arrivals rule - see where it is read in
+# get_st_files_report. Production leaves this None and nothing in the app ever
+# assigns it; scripts/st_arrival_sweep.py sets it to score candidate rules
+# against the real sheets using the report's own category/space-unit
+# resolution instead of a re-implementation.
+_ST_ARRIVAL_RULE = None
+
 # The RR4 (ร.ร.๔) hotel-register filing needs the property's Thai REGISTERED
 # name, which is not always the same string as _RR3_PROPERTY_THAI_NAMES above
 # (that one backs guest-facing RR3 cards, a different, less formal use) -
@@ -3019,23 +3026,27 @@ class SyncService:
         # spreadsheet snapshot. ActualStartUtc lives only on the 2023-06-06
         # endpoint, which cannot embed Customers/Resources - hence the second
         # narrow call by ReservationIds, the same one get_rr3_cards makes.
+        # Fetched ONLY for the offline rule sweep - production reads
+        # StartUtc and never needs this, so the extra round trip is not paid
+        # on the nightly import. scripts/st_arrival_sweep.py sets the seam,
+        # which is what turns this on.
         actual_start = {}
-        _ids = [r["Id"] for r in reservations if r.get("Id")]
-        for _i in range(0, len(_ids), 1000):
-            _batch = _ids[_i:_i + 1000]
-            try:
-                _ar = await mews_client.post(
-                    "/api/connector/v1/reservations/getAll/2023-06-06",
-                    {"ReservationIds": _batch, "Limitation": {"Count": len(_batch)}},
-                    property_name=property_name,
-                )
-                for _r in _ar.get("Reservations", []):
-                    if _r.get("Id") and _r.get("ActualStartUtc"):
-                        actual_start[_r["Id"]] = _r["ActualStartUtc"]
-            except Exception as e:
-                # Degrades to scheduled-only, i.e. exactly the old behaviour.
-                logger.warning(
-                    f"ST Files: could not read ActualStartUtc for {property_name}: {e}")
+        if _ST_ARRIVAL_RULE is not None:
+            _ids = [r["Id"] for r in reservations if r.get("Id")]
+            for _i in range(0, len(_ids), 1000):
+                _batch = _ids[_i:_i + 1000]
+                try:
+                    _ar = await mews_client.post(
+                        "/api/connector/v1/reservations/getAll/2023-06-06",
+                        {"ReservationIds": _batch, "Limitation": {"Count": len(_batch)}},
+                        property_name=property_name,
+                    )
+                    for _r in _ar.get("Reservations", []):
+                        if _r.get("Id") and _r.get("ActualStartUtc"):
+                            actual_start[_r["Id"]] = _r["ActualStartUtc"]
+                except Exception as e:
+                    logger.warning(
+                        f"ST Files: could not read ActualStartUtc for {property_name}: {e}")
 
         # 6b. Complimentary count - Rate AND Segment, see _is_complimentary
         # above for the sheet formula both of them come from.
@@ -3244,22 +3255,30 @@ class SyncService:
             # matching MEWS's own Availability/ST export (e.g. Lub d Siem Reap:
             # 10-bed dorm bookings count as 10 bed arrivals/departures).
             units = len(space_categories(res))
-            # Exactly ONE canonical arrival instant per reservation - the real
-            # check-in when MEWS has recorded one, the scheduled time
-            # otherwise - so every reservation belongs to exactly one day's
-            # Arrivals list. This was a same-day-only union (scheduled OR
-            # actual, whichever matched) until Makati #227062 on
-            # 06/07-Sep-2026 showed why that is unsafe across days: scheduled
-            # 06-Sep 23:45, actually checked in 07-Sep 03:45, so 06-Sep's own
-            # report (built earlier, using scheduled StartUtc) filed it as
-            # that day's arrival, and 07-Sep's report (built the next day,
-            # matching actual under the union) filed it AGAIN - one guest on
-            # two consecutive days' submitted ST files. A union can only ever
-            # ADD a day a reservation qualifies for; it can never remove the
-            # day it no longer belongs to once the real check-in is known.
-            # Picking one instant does both at once.
-            sched_arrives = in_window(res.get("StartUtc"))
-            arrives = in_window(actual_start.get(res.get("Id")) or res.get("StartUtc"))
+            # The arrival day is the SCHEDULED StartUtc's day, full stop.
+            #
+            # Two attempts to improve on that with the real check-in time have
+            # now been measured and both were wrong. A union (scheduled OR
+            # actual) double-counted Makati #227062 across 06 and 07-Sep,
+            # putting one guest on two consecutive days' submitted files.
+            # Replacing it (actual preferred, scheduled as fallback) fixed
+            # that but moved #227062 and #227099 - both scheduled 06-Sep 23:45,
+            # both actually checked in in the small hours of the 7th - onto
+            # the 7th, where the sheet does not have them, leaving Makati +2
+            # on BLDD and DTR.
+            #
+            # Scored the honest way, cached import against the sheet on
+            # 07-Sep-2026 (both frozen within the hour, so drift cannot
+            # flatter either side), plain scheduled reproduces all eight
+            # properties exactly. The earlier Chinatown case that argued for
+            # the real check-in (#97197, 06-Sep) was measured against LIVE
+            # MEWS, and Makati has since been shown to move by six
+            # reservations in twelve hours - so that measurement is no longer
+            # trustworthy and its sheet has rolled over, which means it cannot
+            # be re-checked. If it resurfaces, re-measure against a cached
+            # import and a sheet of the same date, never against live.
+            arrives = in_window(res.get("StartUtc"))
+            sched_arrives = arrives
             departs = in_window(res.get("EndUtc"))
             day_use = arrives and departs
             # The Customers tab keeps the SCHEDULED-only reading. Letting the
@@ -3319,6 +3338,19 @@ class SyncService:
                     (rates_by_id.get(res.get("RateId"), {}) or {}).get("Name") or ""))
                 night_tail = (not walk_in
                               and started.astimezone(property_tz).hour < _ST_DAY_USE_NIGHT_END_HOUR)
+            # Test seam. When _ST_ARRIVAL_RULE is set (only ever by the
+            # offline rule-sweep in scripts/, never in production - it is None
+            # here and nothing in the app assigns it), that callable decides
+            # the arrival outright and the day-use/night-tail pair above is
+            # bypassed. It exists so a candidate rule can be scored using this
+            # function's REAL category and space-unit resolution rather than a
+            # re-implementation of it, which is how the previous rules got
+            # scored against numbers that were subtly not the report's own.
+            if _ST_ARRIVAL_RULE is not None:
+                arrives = bool(_ST_ARRIVAL_RULE(
+                    res, actual_start.get(res.get("Id")), in_window, parse_utc,
+                    property_tz, rates_by_id, day_start_utc, day_end_utc))
+                day_use = night_tail = False
             if arrives and not (day_use and night_tail):
                 arrivals.append({**reservation_row(res), "spaces": units})
                 arrivals_count += units
