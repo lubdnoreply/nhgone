@@ -1425,8 +1425,8 @@ export default function TemplatesPage() {
             onClick={(e) => e.stopPropagation()}
           >
             {sendNowModal.kind === "confirm" && (
-              <div className="p-6">
-                <div className="w-12 h-12 rounded-full bg-[#AAA024]/10 flex items-center justify-center mb-4">
+              <div className="p-6 text-center">
+                <div className="w-12 h-12 rounded-full bg-[#AAA024]/10 flex items-center justify-center mb-4 mx-auto">
                   <svg className="w-6 h-6 text-[#AAA024]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
@@ -1463,8 +1463,8 @@ export default function TemplatesPage() {
             )}
 
             {sendNowModal.kind === "result" && (
-              <div className="p-6">
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 ${sendNowModal.success ? "bg-[#152A00]/10" : "bg-red-50"}`}>
+              <div className="p-6 text-center">
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 mx-auto ${sendNowModal.success ? "bg-[#152A00]/10" : "bg-red-50"}`}>
                   {sendNowModal.success ? (
                     <svg className="w-6 h-6 text-[#152A00]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                   ) : (
