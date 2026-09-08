@@ -2997,24 +2997,39 @@ class SyncService:
         customers_map = {c["Id"]: c for c in resv_res.get("Customers", []) if c.get("Id")}
         resources_map = {r["Id"]: r for r in resv_res.get("Resources", []) if r.get("Id")}
 
-        # Real check-in times, used ONLY to ADD an arrival the scheduled time
-        # would file on the wrong day - never to remove one. StartUtc here is
-        # the legacy endpoint's DEPRECATED *scheduled* arrival and never moves
-        # once the guest turns up, the same trap CLAUDE.md records as a real
-        # bug in RR3 and RR4. Chinatown #97197 on 06-Sep-2026 is the case:
-        # scheduled 05-Sep 23:45, actually checked in 06-Sep 00:01, checked
-        # out 06-Sep 11:31 - an ordinary one-night stay that crossed midnight
-        # on the way in, which we filed on the 5th and MEWS's own export
-        # counted on the 6th.
+        # Real check-in times. StartUtc here is the legacy endpoint's
+        # DEPRECATED *scheduled* arrival and never moves once the guest turns
+        # up, the same trap CLAUDE.md records as a real bug in RR3 and RR4.
+        # Chinatown #97197 on 06-Sep-2026 is the case: scheduled 05-Sep 23:45,
+        # actually checked in 06-Sep 00:01, checked out 06-Sep 11:31 - an
+        # ordinary one-night stay that crossed midnight on the way in, which
+        # we filed on the 5th and MEWS's own export counted on the 6th.
         #
-        # Deliberately a UNION rather than a replacement. Replacing StartUtc
-        # with ActualStartUtc outright was tried and measured against all
-        # eight sheets for 06-Sep: it fixed nothing and cost Makati two
-        # arrivals, because it also moves OUT every reservation whose real
-        # check-in landed outside the day. Adding-only cannot lose a row.
-        # ActualStartUtc lives only on the 2023-06-06 endpoint, which cannot
-        # embed Customers/Resources - hence the second narrow call by
-        # ReservationIds, the same one get_rr3_cards makes.
+        # Used to fold in as a UNION (scheduled OR actual, whichever matched
+        # THIS day) rather than replace StartUtc outright, on the reasoning
+        # that a union can only ever ADD a day a reservation qualifies for and
+        # so could never cost an already-correct match. That reasoning holds
+        # for any single day in isolation and fails across two: Makati #227062
+        # on 06/07-Sep-2026 was scheduled 06-Sep 23:45 and actually checked in
+        # 07-Sep 03:45. 06-Sep's own report (built that day, matching
+        # scheduled) filed it as a 06-Sep arrival; 07-Sep's report (built the
+        # next day, matching actual under the union) filed it AGAIN - one
+        # guest on two consecutive days' submitted ST files, because each
+        # day's report is built independently and a union never revokes a
+        # match once the real check-in time moves it elsewhere.
+        #
+        # Now exactly one canonical instant per reservation - actual when
+        # MEWS has recorded it, scheduled otherwise - so a reservation
+        # belongs to exactly one day, full stop. This DOES mean a reservation
+        # whose actual check-in lands outside the day its own scheduled time
+        # would have placed it in is filed under the actual day only, even
+        # when that moves it away from a sheet total measured before this
+        # existed; a duplicate across two real submitted files is a worse
+        # defect than a debatable single-day total, and is not one this
+        # report is in a position to accept for the sake of matching a
+        # spreadsheet snapshot. ActualStartUtc lives only on the 2023-06-06
+        # endpoint, which cannot embed Customers/Resources - hence the second
+        # narrow call by ReservationIds, the same one get_rr3_cards makes.
         actual_start = {}
         _ids = [r["Id"] for r in reservations if r.get("Id")]
         for _i in range(0, len(_ids), 1000):
@@ -3240,9 +3255,22 @@ class SyncService:
             # matching MEWS's own Availability/ST export (e.g. Lub d Siem Reap:
             # 10-bed dorm bookings count as 10 bed arrivals/departures).
             units = len(space_categories(res))
-            # Union, not replacement - see actual_start above.
+            # Exactly ONE canonical arrival instant per reservation - the real
+            # check-in when MEWS has recorded one, the scheduled time
+            # otherwise - so every reservation belongs to exactly one day's
+            # Arrivals list. This was a same-day-only union (scheduled OR
+            # actual, whichever matched) until Makati #227062 on
+            # 06/07-Sep-2026 showed why that is unsafe across days: scheduled
+            # 06-Sep 23:45, actually checked in 07-Sep 03:45, so 06-Sep's own
+            # report (built earlier, using scheduled StartUtc) filed it as
+            # that day's arrival, and 07-Sep's report (built the next day,
+            # matching actual under the union) filed it AGAIN - one guest on
+            # two consecutive days' submitted ST files. A union can only ever
+            # ADD a day a reservation qualifies for; it can never remove the
+            # day it no longer belongs to once the real check-in is known.
+            # Picking one instant does both at once.
             sched_arrives = in_window(res.get("StartUtc"))
-            arrives = sched_arrives or in_window(actual_start.get(res.get("Id")))
+            arrives = in_window(actual_start.get(res.get("Id")) or res.get("StartUtc"))
             departs = in_window(res.get("EndUtc"))
             day_use = arrives and departs
             # The Customers tab keeps the SCHEDULED-only reading. Letting the
