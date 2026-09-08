@@ -63,6 +63,58 @@ METRICS = [
 # Manila is UTC+8; every other property is UTC+7.
 TZ_OFFSET = {"Lub d Philippines Makati": 8}
 
+# One general reason PER METRIC for why it can differ from the sheet at all -
+# the <<SummaryTable>>'s Remark column. Distinct from the per-property Notes
+# cell (which already says WHICH property and by how much): this says WHY
+# that kind of gap can exist in the first place, and it is the single most
+# useful thing this mail can teach a reader, because the two failure modes
+# read identically in the numbers but need completely different responses:
+#
+#   - Six of these nine (Spaces, Occupied, House uses, Out of order,
+#     Availability, Customers) are read STRAIGHT FROM MEWS - see
+#     get_st_files_report's six-call fetch. We never touch these numbers.
+#     A difference here is a real booking that changed, was added or was
+#     cancelled in MEWS AFTER the sheet was pasted - never our logic, and
+#     never fixable by editing this app. Re-importing later in the day only
+#     makes it look worse, because more time has passed since the sheet's
+#     snapshot for the guest list to move (confirmed against Makati,
+#     07-Sep-2026: a same-day re-import 15 hours after the scheduled one
+#     turned a 1-cell miss into six, purely from bookings changing in MEWS
+#     during the day - see the arrival-day comment on _ST_ARRIVAL_RULE for
+#     the reservation-level proof).
+#   - Arrivals, Departures and Complimentary are the three MEWS has no
+#     ready-made figure for at all - see the metric probe in
+#     sync_service._ST_ARRIVAL_RULE's own comment, which found MEWS's
+#     Availability endpoint accepts only Occupied/HouseUse/OutOfOrderBlocks/
+#     ActiveResources/UsableResources/AllocatedBlockAvailability, nothing
+#     resembling an arrival count. These three are derived here from each
+#     reservation's own fields, so a difference COULD be a live booking
+#     change same as the six above, but could also be a genuine edge case in
+#     that derivation - worth a second look rather than dismissed as drift.
+_METRIC_REMARKS = {
+    "spaces": "Read directly from MEWS. A difference means a room or category was added, "
+              "removed or reassigned after the sheet was pasted.",
+    "occupied": "Read directly from MEWS. A difference means a booking changed after the "
+                "sheet was pasted - not something calculated here.",
+    "house_use": "Read directly from MEWS. A difference reflects a real change made after "
+                 "the sheet was pasted.",
+    "out_of_order": "Read directly from MEWS. A difference reflects a real change made "
+                    "after the sheet was pasted.",
+    "availability": "MEWS's own precomputed free-to-sell number, never calculated here. "
+                    "A difference is a live change since the sheet was pasted.",
+    "customers": "Read directly from MEWS. A difference means a booking was added, "
+                 "cancelled or modified after the sheet's snapshot.",
+    "arrivals": "MEWS has no Arrivals figure to read - this is calculated here from each "
+                "reservation's own check-in time. Could be a live booking change (see "
+                "Occupied's remark) or a genuine edge case in that calculation - worth "
+                "checking which before assuming it will clear on its own.",
+    "departures": "Calculated the same way as Arrivals, from each reservation's own "
+                  "checkout time - not read from MEWS. Same two possible causes.",
+    "complimentary": "Detected from each reservation's Rate name or Business Segment, not "
+                     "read as a single MEWS figure. A difference usually means a booking's "
+                     "rate or segment changed after the sheet was pasted.",
+}
+
 
 def _parse_master(content: bytes) -> dict:
     """Master tab as {label: value}, plus the report date and the timestamp
@@ -323,10 +375,19 @@ def render_text(result: dict) -> str:
     if result["window"]:
         out.append(f"เทียบ snapshot ของเรา (จับเวลา {result['window'][0]} – {result['window'][1]}) กับชีต")
     out += ["", f"{'คอลัมน์':<16}{'ตรง':<8}หมายเหตุ", "-" * 78]
+    metric_keys = {label: key for label, key in METRICS}
     for c in result["columns"]:
-        note = "✅" if c["matched"] == c["total"] else ", ".join(c["notes"])
+        good = c["matched"] == c["total"]
+        note = "✅" if good else ", ".join(c["notes"])
         score = f"{c['matched']}/{c['total']}"
         out.append(f"{c['label']:<16}{score:<8}{note}")
+        # Same Remark shown in the HTML table's own column - only printed here
+        # for a mismatched row, so a fully matched day's text stays terse;
+        # the HTML table shows it on every row since it has a column to hold it.
+        if not good:
+            remark = _METRIC_REMARKS.get(metric_keys.get(c["label"]))
+            if remark:
+                out.append(f"{'':<24}↳ {remark}")
     out.append("-" * 78)
     out.append(f"ตรงกัน {result['matched_cells']}/{result['total_cells']} ช่อง"
                + ("  — ทุกช่องตรงหมด ✅" if result["matched_cells"] == result["total_cells"] else ""))
@@ -349,19 +410,30 @@ _TH = "padding:6px 10px;border:1px solid #e2e8f0;font-size:11px;font-weight:700;
 
 def render_summary_table(result: dict) -> str:
     """Per-column "ตรง X/8" summary - the <<SummaryTable>> token, and the
-    table this whole mail was originally asked for."""
+    table this whole mail was originally asked for.
+
+    Remark is a general, per-metric explanation (see _METRIC_REMARKS) of WHY
+    that kind of gap can exist at all - distinct from Notes, which says WHICH
+    property and by how much. Shown on every row, matched or not: knowing
+    that Occupied is read straight from MEWS is exactly what tells a reader
+    a clean row there isn't luck, and a future gap there isn't our bug.
+    """
     if result["status"] != "ok":
         return f'<pre style="font-family:ui-monospace,monospace;font-size:13px">{render_text(result)}</pre>'
 
+    metric_keys = {label: key for label, key in METRICS}
     h = [f'<table style="border-collapse:collapse;width:100%"><tr>'
-         f'<th style="{_TH}">Column</th><th style="{_TH}">Matched</th><th style="{_TH}">Notes</th></tr>']
+         f'<th style="{_TH}">Column</th><th style="{_TH}">Matched</th>'
+         f'<th style="{_TH}">Notes</th><th style="{_TH}">Remark</th></tr>']
     for c in result["columns"]:
         good = c["matched"] == c["total"]
         note = "✅" if good else ", ".join(c["notes"])
         colour = "" if good else "color:#b45309;font-weight:700;"
+        remark = _METRIC_REMARKS.get(metric_keys.get(c["label"]), "")
         h.append(f'<tr><td style="{_TD}font-weight:600">{c["label"]}</td>'
                  f'<td style="{_TD}{colour}">{c["matched"]}/{c["total"]}</td>'
-                 f'<td style="{_TD}{colour}">{note}</td></tr>')
+                 f'<td style="{_TD}{colour}">{note}</td>'
+                 f'<td style="{_TD}color:#94a3b8;font-size:11px">{remark}</td></tr>')
     h.append("</table>")
     return "".join(h)
 

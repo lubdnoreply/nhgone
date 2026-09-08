@@ -209,7 +209,7 @@ const ST_COMPARE_TOKENS: TokenDoc[] = [
   { name: "Summary", description: "One-line verdict, e.g. \"ตรงกัน 68/72 ช่อง\" - usable in the Subject too" },
   { name: "PropertyCount", description: "How many properties were compared" },
   { name: "Window", description: "When our own snapshots were captured, earliest to latest" },
-  { name: "SummaryTable", description: "Pre-built HTML: per-metric \"ตรง X/8\" summary with a note naming which properties differ" },
+  { name: "SummaryTable", description: "Pre-built HTML: per-metric \"ตรง X/8\" summary with a Notes column naming which properties differ and a Remark column explaining why that kind of gap can happen at all (e.g. read straight from MEWS vs calculated here)" },
   { name: "GridTable", description: "Pre-built HTML: every property x every metric, ours / sheet, mismatches highlighted - each property name links to that property's own sheet" },
   { name: "SheetLinks", description: "Pre-built HTML: a bulleted list of all 8 properties, each linking to its own \"<Name>-ST\" Google Sheet" },
 ];
@@ -542,8 +542,10 @@ const PREVIEW_SAMPLE_BUILDERS: Record<TemplateType, () => Record<string, string>
     PropertyCount: "8",
     Window: "26 Aug 01:20 – 26 Aug 02:03",
     SummaryTable: buildCompareSampleTable(
-      ["คอลัมน์", "ตรง", "หมายเหตุ"],
-      [["Spaces", "8/8", "✅"], ["Occupied", "8/8", "✅"], ["Arrivals", "6/8", "Samui +3, Siem Reap +10"]],
+      ["Column", "Matched", "Notes", "Remark"],
+      [["Spaces", "8/8", "✅", "Read directly from MEWS. A difference means a room or category was added, removed or reassigned after the sheet was pasted."],
+       ["Occupied", "8/8", "✅", "Read directly from MEWS. A difference means a booking changed after the sheet was pasted - not something calculated here."],
+       ["Arrivals", "6/8", "Samui +3, Siem Reap +10", "MEWS has no Arrivals figure to read - this is calculated here from each reservation's own check-in time."]],
     ),
     GridTable: buildCompareSampleTable(
       ["Property", "Spaces", "Occupied", "Arrivals", "Departures"],
