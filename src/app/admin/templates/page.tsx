@@ -1245,7 +1245,7 @@ export default function TemplatesPage() {
                     disabled={recipSendingTest}
                     className="mt-3 w-full py-3.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-2xl font-bold transition-all active:scale-[0.98] disabled:opacity-50"
                   >
-                    {recipSendingTest ? "Sending..." : "Send Test Now"}
+                    {recipSendingTest ? "Sending..." : "Send"}
                   </button>
                 </>
               )}
@@ -1386,7 +1386,7 @@ export default function TemplatesPage() {
                   disabled={sendingTest}
                   className="mt-3 w-full py-3.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-2xl font-bold transition-all active:scale-[0.98] disabled:opacity-50"
                 >
-                  {sendingTest ? "Sending..." : "Send Test Now"}
+                  {sendingTest ? "Sending..." : "Send"}
                 </button>
               )}
             </>
