@@ -2707,7 +2707,6 @@ class SyncService:
             return f"{local.day:02d}/{local.month:02d}/{local.year}"
 
         rows = []
-        _tm30_by_guest = {}  # guest_id -> the row currently filed for them today
         for res in reservations:
             if not in_window(res.get("StartUtc")):
                 continue
@@ -2745,29 +2744,9 @@ class SyncService:
                 # not a document number anyone can act on.
                 identity_card = self._rr4_tm30_identity_card(c)
                 passport = (c.get("Passport") or {}).get("Number", "")
-                start_utc = res.get("StartUtc") or ""
-                # ONE notification per foreign national per day, keeping
-                # whichever of that guest's arrivals happened LAST. Patong
-                # 06-Sep-2026, Tameem Jlowi T Aldossary: a "Walk In Room Only"
-                # day room 02:00-12:00, then a real multi-night stay checked
-                # in separately at 14:59 the same day - two genuine, active
-                # MEWS reservations for one person, which used to file as two
-                # lines on one TM30. The sheet's own source (MEWS's "Customer
-                # profiles Arrival" report) lists this person once, which
-                # makes sense for what TM30 actually is: a notification that
-                # a foreign national is staying at this address, not a log of
-                # booking events. The later arrival wins because by the time
-                # anyone files this, the earlier one has already checked out -
-                # it is the later stay the notification needs to be about.
-                prev = _tm30_by_guest.get(guest_id)
-                if prev is not None and prev["_start_utc"] >= start_utc:
-                    continue
-                if prev is not None:
-                    rows.remove(prev)
-                row = {
+                rows.append({
                     # Same identity scheme as RR4's rows - see its own note.
                     "_key": f"{res.get('Id') or ''}:{guest_id}",
-                    "_start_utc": start_utc,
                     "first_name": c.get("FirstName", ""),
                     "middle_name": c.get("SecondLastName", ""),
                     "last_name": c.get("LastName", ""),
@@ -2782,14 +2761,7 @@ class SyncService:
                     "birth_date": gregorian_date(c.get("BirthDate")),
                     "check_out_date": gregorian_date(res.get("EndUtc")),
                     "phone": c.get("Phone", ""),
-                }
-                _tm30_by_guest[guest_id] = row
-                rows.append(row)
-
-        # "_start_utc" exists only to pick a winner above and was never part
-        # of the filed form.
-        for row in rows:
-            del row["_start_utc"]
+                })
 
         report = {
             "property": property_name,
