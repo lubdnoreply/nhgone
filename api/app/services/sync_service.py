@@ -333,9 +333,26 @@ def _rr3_country_name(code: str) -> str:
 # Two guests are what this cost per day: Siam's PEI FANG LEE (StartUtc
 # 2026-09-03T18:28Z = 01:28 local) and Samui's Pulkit Chaudhary
 # (2026-09-03T17:06Z = 00:06 local), both on their sheets, both dropped by an
-# 02:0x lower bound and both recovered by midnight. Do not "fix" a future
-# mismatch by setting these back to the sheet's declared time without
-# re-measuring - that is the change this note exists to stop.
+# 02:0x lower bound and both recovered by midnight.
+#
+# RE-MEASURED AND REVERSED 08-Sep-2026: the five are back on 02:00, because
+# the same measurement run against 07-Sep-2026 came out the other way -
+# 02:00 reconciled 5 of 5 comparable properties exactly (Siam 16/16, Samui
+# 87/87, Koh Tao 13/13, Patong 53/53, Marasca 26/26) where midnight managed
+# 3 of 5.
+#
+# Both results are real, and the reason they disagree is that the window
+# start moves BOTH ends. A guest arriving 00:00-02:00 on day D lands in D
+# under midnight and in D-1 under 02:00; a guest arriving 00:00-02:00 on day
+# D+1 lands in D+1 under midnight and in D under 02:00. 04-Sep's boundary
+# guests were the first kind and 07-Sep's were the second (Siam's two at
+# 08-Sep 02:00 and Patong's Anton Kulikov at 08-Sep 00:17, all three on the
+# sheet's 07-Sep file and all three missed by a midnight upper bound).
+#
+# So this WILL look wrong again on a day whose boundary guests fall the other
+# way. Re-measure before moving it, on more than one day if possible, and
+# expect neither value to be right every morning - the sheets' own ~02:0x
+# declared start is what the current setting is tracking.
 _TM30_DAY_START_FALLBACK = {
     "Lub d Bangkok Chinatown": (12, 15),
 }
