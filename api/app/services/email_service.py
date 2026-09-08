@@ -147,6 +147,8 @@ DEFAULT_ST_COMPARE_TEMPLATE = """<div style="background-color:#FFEFD2; padding:4
         <h3 style="margin:28px 0 8px 0; font-size:15px; color:#152A00;">Full Table &mdash; Ours / Sheet</h3>
         <<GridTable>>
         <p style="margin:24px 0 0 0; font-size:11px; color:#94a3b8;">Our snapshot was captured <<Window>> &middot; <<PropertyCount>> properties</p>
+        <h3 style="margin:28px 0 8px 0; font-size:15px; color:#152A00;">Sheet Links</h3>
+        <<SheetLinks>>
       </td>
     </tr>
   </table>

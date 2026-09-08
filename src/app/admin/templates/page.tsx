@@ -210,7 +210,8 @@ const ST_COMPARE_TOKENS: TokenDoc[] = [
   { name: "PropertyCount", description: "How many properties were compared" },
   { name: "Window", description: "When our own snapshots were captured, earliest to latest" },
   { name: "SummaryTable", description: "Pre-built HTML: per-metric \"ตรง X/8\" summary with a note naming which properties differ" },
-  { name: "GridTable", description: "Pre-built HTML: every property x every metric, ours / sheet, mismatches highlighted" },
+  { name: "GridTable", description: "Pre-built HTML: every property x every metric, ours / sheet, mismatches highlighted - each property name links to that property's own sheet" },
+  { name: "SheetLinks", description: "Pre-built HTML: a bulleted list of all 8 properties, each linking to its own \"<Name>-ST\" Google Sheet" },
 ];
 
 const RR4_COMPARE_TOKENS: TokenDoc[] = [
@@ -546,8 +547,13 @@ const PREVIEW_SAMPLE_BUILDERS: Record<TemplateType, () => Record<string, string>
     ),
     GridTable: buildCompareSampleTable(
       ["Property", "Spaces", "Occupied", "Arrivals", "Departures"],
-      [["Chinatown", "✓ 176", "✓ 150", "✓ 30", "✓ 28"], ["Samui", "✓ 60", "✓ 55", "87 / 84", "✓ 9"]],
+      [["<a href=\"#\">Chinatown</a>", "✓ 176", "✓ 150", "✓ 30", "✓ 28"],
+       ["<a href=\"#\">Samui</a>", "✓ 60", "✓ 55", "87 / 84", "✓ 9"]],
     ),
+    SheetLinks: '<ul style="margin:4px 0;padding-left:18px;font-size:13px">'
+      + ["Chinatown", "Siam", "Samui", "Koh Tao", "Makati", "Patong", "Siem Reap", "Marasca"]
+        .map((n) => `<li><a href="#">${n}</a></li>`).join("")
+      + "</ul>",
   }),
   // Mirrors rr4_compare_service's three render_* tables - same column order,
   // same "Google Sheet / NHGOne" reading direction, same green-tick /

@@ -337,6 +337,9 @@ def render_text(result: dict) -> str:
             out.append(f"  {SHEETS[prop][0]:<12} " + ",  ".join(f"{l} {o}/{s}" for l, o, s in items))
     for prop, err in (result.get("sheet_errors") or {}).items():
         out.append(f"  !! {SHEETS[prop][0]}: อ่านชีตไม่ได้ - {err}")
+    out += ["", "ลิงก์ชีตแต่ละ Property:"]
+    for prop, (short, sheet_id) in SHEETS.items():
+        out.append(f"  {short:<12} {_sheet_url(sheet_id)}")
     return "\n".join(out)
 
 
@@ -363,10 +366,21 @@ def render_summary_table(result: dict) -> str:
     return "".join(h)
 
 
+def _sheet_url(sheet_id: str) -> str:
+    """The same URL a person would open by hand to look at the sheet, not the
+    /export?format=xlsx one this module fetches with - that one downloads a
+    file instead of opening the workbook."""
+    return f"https://docs.google.com/spreadsheets/d/{sheet_id}/edit"
+
+
 def render_grid_table(result: dict) -> str:
     """Every property x every metric, ours / sheet - the <<GridTable>> token.
     Wrapped in a horizontally scrollable box: ten columns of numbers is wider
-    than a phone, and a table that overflows the body is unreadable."""
+    than a phone, and a table that overflows the body is unreadable.
+
+    Each property's name links to ITS OWN "<Name>-ST" sheet - the one this
+    row was actually compared against - so a mismatch can be opened and
+    checked by hand without going to find the link separately."""
     if result["status"] != "ok":
         return ""
 
@@ -375,8 +389,10 @@ def render_grid_table(result: dict) -> str:
     for label, _ in METRICS:
         h.append(f'<th style="{_TH}">{label}</th>')
     h.append("</tr>")
-    for prop, (short, _) in SHEETS.items():
-        h.append(f'<tr><td style="{_TD}font-weight:600;white-space:nowrap">{short}</td>')
+    for prop, (short, sheet_id) in SHEETS.items():
+        h.append(f'<tr><td style="{_TD}font-weight:600;white-space:nowrap">'
+                 f'<a href="{_sheet_url(sheet_id)}" style="color:#152A00;text-decoration:underline">'
+                 f'{short}</a></td>')
         for label, _k in METRICS:
             ov, sv = result["grid"].get(prop, {}).get(label, (None, None))
             if ov is None and sv is None:
@@ -388,8 +404,21 @@ def render_grid_table(result: dict) -> str:
             h.append(f'<td style="{_TD}{style}">{cell}</td>')
         h.append("</tr>")
     h.append("</table></div>")
-    h.append('<p style="font-size:11px;color:#94a3b8;margin:6px 0 0">Ours / Sheet — ✓ = match</p>')
+    h.append('<p style="font-size:11px;color:#94a3b8;margin:6px 0 0">'
+             'Ours / Sheet — ✓ = match. Property name links to that property\'s own sheet.</p>')
     return "".join(h)
+
+
+def render_sheet_links(result: dict) -> str:
+    """All 8 sheets as a standalone list - the <<SheetLinks>> token, for a
+    template that wants the links called out on their own rather than only
+    reachable by clicking a property name inside GridTable."""
+    items = "".join(
+        f'<li style="margin:2px 0"><a href="{_sheet_url(sheet_id)}" '
+        f'style="color:#152A00">{short}</a></li>'
+        for _prop, (short, sheet_id) in SHEETS.items()
+    )
+    return f'<ul style="margin:4px 0;padding-left:18px;font-size:13px">{items}</ul>'
 
 
 def render_tokens(result: dict) -> dict:
@@ -404,6 +433,7 @@ def render_tokens(result: dict) -> dict:
         "Window": f"{window[0]} \u2013 {window[1]}" if window else "\u2014",
         "SummaryTable": render_summary_table(result),
         "GridTable": render_grid_table(result),
+        "SheetLinks": render_sheet_links(result),
     }
 
 
